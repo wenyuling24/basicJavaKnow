@@ -522,6 +522,9 @@
 		  使用自定义比较器，对数组元素进行排序（串行排序）array 目标数组 
 		  Interface Comparator<T> 对任意类型集合对象进行整体排序，排序时将此接口的实现传递给Collections.sort方法或者Arrays.sort方法排序.
 		  实现int compare(T o1, T o2);方法，返回正数，零，负数各代表大于，等于，小于
+		  如果指定的数与参数相等返回0。
+		  如果指定的数小于参数返回 -1。
+		  如果指定的数大于参数返回 1。
 		  Demo
 		   public static void fun1() {
 			// 排序
@@ -841,11 +844,104 @@
 			void sort(List list, Comparator c);定制排序，由Comparator控制排序逻辑
 			void swap(List list, int i , int j),交换两个索引位置的元素
 			void rotate(List list, int distance),旋转。当distance为正数时，将list后distance个元素整体移到前面。当distance为负数时，将 list的前distance个元素整体移到后面。
+			Demo:
+			   public static void fun1(){
+
+				List<Integer> list = new ArrayList<>();
+				list.add(12);
+				list.add(-15);
+				list.add(7);
+				list.add(4);
+				list.add(35);
+				list.add(9);
+
+				System.out.println("源列表：" + list);
+				// 逆序
+				Collections.reverse(list);
+				System.out.println("逆序：" + list);
+
+				// 排序（自然顺序）
+				Collections.sort(list);
+				System.out.println("自然序：" + list);
+
+				// 随机排序
+				Collections.shuffle(list);
+				System.out.println("随机序：" + list);
+
+				// 定制排序的用法，将int类型转成string进行比较
+				Collections.sort(list, new Comparator<Object>() {
+				  @Override
+				  public int compare(Object o1, Object o2) {
+					String str1 = String.valueOf(o1);
+					String str2 = String.valueOf(o2);
+
+					return str1.compareTo(str2);
+				  }
+				});
+				System.out.println("定制序：" + list);
+
+				// 旋转
+				Collections.rotate(list, 3);
+				System.out.println("旋转3：" + list);
+
+				Collections.rotate(list, -3);
+				System.out.println("旋转-3：" + list);
+			  }
+			  -------------------------------------------------------
+			  Output:
+			  源列表：[12, -15, 7, 4, 35, 9]
+			  逆序：[9, 35, 4, 7, -15, 12]
+			  自然序：[-15, 4, 7, 9, 12, 35]
+			  随机序：[9, 12, 4, 7, -15, 35]
+			  定制序：[-15, 12, 35, 4, 7, 9]
+			  旋转3：[4, 7, 9, -15, 12, 35]
+			  旋转-3：[-15, 12, 35, 4, 7, 9]
 		   
 		   
+		   查找，替换操作
+			int binarySearch(List list, Object key), 对List进行二分查找，返回索引，注意List必须是有序的
+			int max(Collection coll),根据元素的自然顺序，返回最大的元素。 类比int min(Collection coll)
+			int max(Collection coll, Comparator c)，根据定制排序，返回最大元素，排序规则由Comparatator类控制。类比int min(Collection coll, Comparator c)
+			void fill(List list, Object obj),用元素obj填充list中所有元素
+			int frequency(Collection c, Object o)，统计元素出现次数
+			int indexOfSubList(List list, List target), 统计targe在list中第一次出现的索引，找不到则返回-1，类比int lastIndexOfSubList(List source, list target).
+			boolean replaceAll(List list, Object oldVal, Object newVal), 用新元素替换旧元素。
+		   
+		   public static void fun1(){
+
+			List<Integer> list = new ArrayList<>();
+			list.add(12);
+			list.add(-15);
+			list.add(7);
+			list.add(4);
+			list.add(35);
+			list.add(9);
+
+			System.out.println("源列表：" + list);
+			System.out.println("最大的元素: " + Collections.max(list));
+			System.out.println("最小元素: " + Collections.min(list));
+			Collections.replaceAll(list,-15, 35);
+			System.out.println("用新元素替换旧元素: " + list);
+			System.out.println("统计元素出现次数: " + Collections.frequency(list, 35));
+			Collections.sort(list);
+			System.out.println("先sort排序，然后对List进行二分查找，得到的是索引： " + Collections.binarySearch(list, 35));
+
+			int index = Collections.binarySearch(list, 35, new Comparator<Integer>() {
+			  @Override public int compare(Integer int1, Integer int2) {
+				return int1.compareTo(int2);
+			  }
+			});
+
+			System.out.println("先sort排序，然后对List进行二分查找，得到的是索引： " + index);
+		  }
+
+  
 		   Collections同步控制
 		   Collections中几乎对每个集合都定义了同步控制方法，例如 SynchronizedList(), SynchronizedSet()等方法，来将集合包装成线程安全的集合。下面是Collections将普通集合包装成线程安全集合的用法，
-		   
+		   Collection c = Collections.synchronizedCollection(new ArrayList());
+		   List list = Collections.synchronizedList(new ArrayList());
+           Set s = Collections.synchronizedSet(new HashSet());
+           Map m = Collections.synchronizedMap(new HashMap());
   三.异常
   四.多线程
   五.IO
