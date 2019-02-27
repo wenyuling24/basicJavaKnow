@@ -943,7 +943,229 @@
            Set s = Collections.synchronizedSet(new HashSet());
            Map m = Collections.synchronizedMap(new HashMap());
   三.异常
+	1.java异常体系及分类
+	  Thorwable类所有异常和错误的超类，有两个子类Error和Exception，分别表示错误和异常。 其中异常类Exception又分为运行时异常(RuntimeException)和非运行时异常，这两种异常有很大的区别，也称之为不检查异常（Unchecked Exception） 
+	和检查异常（Checked Exception）。
+	  1).Error和Exception
+		Error是程序无法处理的错误，比如OutOfMemoryError、ThreadDeath等。这些异常发生时,Java虚拟机（JVM）一般会选择线程终止。 
+		Exception是程序本身可以处理的异常，这种异常分两大类运行时异常和非运行时异常,程序中应当尽可能去处理这些异常。 
+	  2).运行时异常和非运行时异常 
+		运行时异常都是RuntimeException类及其子类异常，如NullPointerException、IndexOutOfBoundsException等，这些异常是不检查异常，程序中可以选择捕获处理，也可以不处理。这些异常一般是由程序逻辑错误引起的，程序应该从逻辑角度尽可能避免这类异常的发生。 
+        非运行时异常是RuntimeException以外的异常，类型上都属于Exception类及其子类。从程序语法角度讲是必须进行处理的异常，如果不处理，程序就不能编译通过。如IOException、SQLException等以及用户自定义的Exception异常，一般情况下不自定义检查异常。
+	2.异常的捕获和处理 
+	  Java异常的捕获和处理是一个不容易把握的事情，如果处理不当，不但会让程序代码的可读性大大降低，而且导致系统性能低下，甚至引发一些难以发现的错误。 
+	  Java异常处理涉及到五个关键字，分别是：try、catch、finally、throw、throws。下面将骤一介绍，通过认识这五个关键字，掌握基本异常处理知识。 
+	  1).异常处理的基本语法
+		try{
+		  //（尝试运行的）程序代码
+		}catch(异常类型 异常的变量名){
+		  //异常处理代码
+		}finally{
+		  //异常发生，方法返回之前，总是要执行的代码
+		}
+		以上语法有三个代码块： 
+		try语句块，表示要尝试运行代码，try语句块中代码受异常监控，其中代码发生异常时，会抛出异常对象。 
+		
+		catch语句块会捕获try代码块中发生的异常并在其代码块中做异常处理，catch语句带一个Throwable类型的参数， 
+		表示可捕获异常类型。当try中出现异常时，catch会捕获到发生的异常，并和自己的异常类型匹配， 
+		若匹配，则执行catch块中代码，并将catch块参数指向所抛的异常对象。catch语句可以有多个， 
+		用来匹配多个中的一个异常，一旦匹配上后，就不再尝试匹配别的catch块了。 
+		通过异常对象可以获取异常发生时完整的JVM堆栈信息，以及异常信息和异常发生的原因等。 
+		
+		finally语句块是紧跟catch语句后的语句块，这个语句块总是会在方法返回前执行， 
+		而不管是否try语句块是否发生异常。并且这个语句块总是在方法返回前执行。 
+		目的是给程序一个补救的机会。这样做也体现了Java语言的健壮性。
+	  2).try、catch、finally三个语句块应注意的问题 
+		第一、try、catch、finally三个语句块均不能单独使用，三者可以组成 try...catch...finally、try...catch、 
+		try...finally三种结构，catch语句可以有一个或多个，finally语句最多一个。 
+		第二、try、catch、finally三个代码块中变量的作用域为代码块内部，分别独立而不能相互访问。 
+		如果要在三个块中都可以访问，则需要将变量定义到这些块的外面。 
+		第三、多个catch块时候，只会匹配其中一个异常类并执行catch块代码，而不会再执行别的catch块， 
+		并且匹配catch语句的顺序是由上到下。
+	  3).throw、throws关键字 
+		throw关键字是用于方法体内部，用来抛出一个Throwable类型的异常。如果抛出了检查异常， 
+		则还应该在方法头部声明方法可能抛出的异常类型。该方法的调用者也必须检查处理抛出的异常。 
+		如果所有方法都层层上抛获取的异常，最终JVM会进行处理，处理也很简单，就是打印异常消息和堆栈信息。 
+		如果抛出的是Error或RuntimeException，则该方法的调用者可选择处理该异常。有关异常的转译会在下面说明。 
+
+		throws关键字用于方法体外部的方法声明部分，用来声明方法可能会抛出某些异常。仅当抛出了检查异常， 
+		该方法的调用者才必须处理或者重新抛出该异常。当方法的调用者无力处理该异常的时候，应该继续抛出， 
+		而不是囫囵吞枣一般在catch块中打印一下堆栈信息做个勉强处理。
+	  4).Throwable类中的常用方法 
+		getCause()：返回抛出异常的原因。如果 cause 不存在或未知，则返回 null。 
+		getMessage()：返回异常的消息信息。 
+		printStackTrace()：对象的堆栈跟踪输出至错误输出流，作为字段 System.err 的值。 
+
+	3.自定义异常
+	  在 Java 中你可以自定义异常。编写自己的异常类时需要记住下面的几点。
+		所有异常都必须是 Throwable 的子类。
+		如果希望写一个检查性异常类，则需要继承 Exception 类。
+		如果你想写一个运行时异常类，那么需要继承 RuntimeException 类。
+		
+		class  自定义异常类 extends 异常类型(Exception){
+		 // 因为父类已经把异常信息的操作都完成了，所在子类只要在构造时，将异常信息传递给父类通过super 语句即可。
+		  // 重写 有参 和 无参  构造方法
+		}
+	
+		Demo
+		
+		////或者继承RuntimeException（运行时异常） 
+		public class MyException extends RuntimeException{
+		  private static final long serialVersionUID = 1L;
+
+		  // 提供无参数的构造方法
+		  public MyException() {
+		  }
+
+		  // 提供一个有参数的构造方法，可自动生成
+		  public MyException(String message) {
+			super(message);// 把参数传递给Throwable的带String参数的构造方法
+		  }
+		}
+		
+		public class CheckScore {
+
+		  // 检查分数合法性的方法check() 如果定义的是运行时异常就不用抛异常了
+		  public void check(int score) throws MyException {// 抛出自己的异常类
+			if (score > 120 || score < 0) {
+			  // 分数不合法时抛出异常
+			  throw new MyException("分数不合法，分数应该是0--120之间");// new一个自己的异常类
+			} else {
+			  System.out.println("分数合法，你的分数是" + score);
+			}
+		  }
+		}
+
+		public static void fun3(){
+			Scanner sc = new Scanner(System.in);
+			int score = sc.nextInt();
+
+			CheckScore check = new CheckScore();
+			try {
+			  check.check(score);
+			} catch (MyException e) {// 用自己的异常类来捕获异常
+			  e.printStackTrace();
+			}
+		  }
+		--------------------------
+		Input: 
+		200
+		Output：
+		com.kunzhuo.xuechelang.test.MyException: 分数不合法，分数应该是0--120之间
+		at com.kunzhuo.xuechelang.test.CheckScore.check(CheckScore.java:18)
+		at com.kunzhuo.xuechelang.test.Test.fun3(Test.java:101)
+		at com.kunzhuo.xuechelang.test.Test.main(Test.java:39)
+
+
   四.多线程
+    1.多线程概念
+	 1).操作系统中进程和线程的概念
+		进程是指一个内存中运行的应用程序，每个进程都有自己独立的一块内存空间，一个进程中可以启动多个线程。比如在Windows系统中，一个运行的exe就是一个进程
+		线程是指进程中的一个执行流程，一个进程中可以运行多个线程，比如java.exe进程中可以运行很多线程。线程总是属于某个进程，进程中的多个线程共享进程的内存。
+	 2).多线程解决的是并发的问题，目的是使任务执行效率更高，实现前提是“阻塞”。它们看上去时同时在执行的，但实际上只是分时间片试用cpu而已
+		也就是说，“同时”执行是线程给人的感觉，在线程之间实际上是轮换执行。
+	 3).Java中的多线程概述、定义任务
+		创建多线程的两种方式：继承Thread类和实现Runnable接口。
+		一个Thread类实例只是一个对象，像Java中的任何其他对象一样，具有变量和方法，生死于堆上。
+		Java中，每个线程都有一个调用栈，即使不在程序中创建任何新的线程，线程也在后台运行着。
+		一个Java应用总是从main()方法开始运行，mian()方法运行在一个线程内，它被称为主线程。
+		一旦创建一个新的线程，就产生一个新的调用栈。
+		线程总体分两类：用户线程和守候线程。	
+		当所有用户线程执行完毕的时候，JVM自动关闭。但是守候线程却不独立于JVM，守候线程一般是由操作系统或者用户自己创建的。
+		a.定义任务(Task)
+		任务：简单来说，就是一序列工作的集合，这些工作之间有前后顺序，这一系列过程执行过后将实现一个结果或达到一个目的。
+　　	首先，思考一个问题，为什么要定义任务？作为java程序员，我们不关心底层的多线程机制是如何执行的，只关心我写个怎样的任务，java的底层的多线程机制才能认识，才能调用你的任务去执行。java是定义了Runnable接口让你去实现，意思就是：你实现Runnable接口类定义一个类，该类的对象就是我能识别的任务，其他方式定义的程序，我都不会将它认为是任务。
+　　	好，到这里要明确一点，我们此时只谈论任务，不说多线程。任务和你平时在一个类中编写的代码并无区别，只是按照java的要求实现了一个接口，并在该接口的run方法中编写了你的代码。也就是说，你平时想编写一个类，该类能够完成一些功能，这个类里的任何方法、变量由你自己来定义，而编写任务时，你需要实现Runnable接口，把你想让该任务实现的代码写到run方法中，当然，你可以在你定义的任务类中再定义其他变量、方法以在run中调用。
+		b.代码实现
+		Demo：
+		public class Task implements Runnable{
+		  protected int countDown = 10;
+		  private static int taskCount = 0 ;
+		  private final int id = taskCount++;
+		  public Task(){}
+		  public Task(int countDown){
+			this.countDown = countDown;
+		  }
+		  public String status(){
+			return "#"+id+"("+(countDown>0?countDown:"Task!")+").    ";
+		  }
+		  @Override
+		  public void run() {
+			while(countDown-->0){//变量countDown先减去1，在和0比较看是否大于0的意思。
+			  System.out.print(status());
+			  Thread.yield();
+			}
+		  }
+		}
+		
+		 public static void fun1(){
+			Task task = new Task();
+			task.run();
+		  }
+		  
+		  --------------------
+		  Output:
+		  #0(9).    #0(8).    #0(7).    #0(6).    #0(5).    #0(4).    #0(3).    #0(2).    #0(1).    #0(Task!).   
+		  c.任务和线程
+		  任务只是一段代码。线程是用来驱动任务执行的，也就是说你要把任务挂载到某个线程上，这样线程才能驱动你定义的任务来执行。
+		  显示的定义线程的过程就是将任务附着到线程的过程。线程Thread自身并不执行任何操作，它只是用来被多线程机制调用，并驱动赋予它的任务。
+			
+		  上面b的Demo
+		  声明线程并将任务附着到该线程上：
+		  Thread t = new Thread(new Task());
+		  t.start();
+		  Thread类的start方法就是触发了java的多线程机制，使得java的多线程能够调用该线程
+		  
+	2.生命周期
+	  当线程被创建并启动以后，它既不是一启动就进入了执行状态，也不是一直处于执行状态。在线程的生命周期中，它要经过新建(New)、就绪（Runnable）、运行（Running）、阻塞(Blocked)和死亡(Dead)5种状态。尤其是当线程启动以后，它不可能一直"霸占"着CPU独自运行，所以CPU需要在多条线程之间切换，于是线程状态也会多次在运行、阻塞之间切换
+	    // 开始线程  
+		public void start( );  
+		public void run( );  //
+		注意：启动线程使用start()方法，而不是run()方法。永远不要调用线程对象的run()方法。调用start0方法来启动线程，系统会把该run()方法当成线程执行体来处理；但如果直按调用线程对象的run()方法，则run()方法立即就会被执行，而且在run()方法返回之前其他线程无法并发执行。
+		也就是说，系统把线程对象当成一个普通对象，而run()方法也是一个普通方法，而不是线程执行体。需要指出的是，调用了线程的run()方法之后，该线程已经不再处于新建状态，不要再次调用线程对象的start()方法。只能对处于新建状态的线程调用start()方法，否则将引发IllegaIThreadStateExccption异常。
+
+		 
+		// 挂起和唤醒线程  
+		public void resume( );     // 不建议使用  
+		public void suspend( );    // 不建议使用  
+		public static void sleep(long millis);  
+		public static void sleep(long millis, int nanos);  
+		public final native void wait() throws InterruptedException;
+		public final native void notify();
+		public final native void notifyAll();
+		 
+		// 终止线程  
+		public void stop( );       // 不建议使用  
+		public void interrupt( );  
+		 
+		// 得到线程状态  
+		public boolean isAlive( );  
+		public boolean isInterrupted( );  
+		public static boolean interrupted( );  
+		 
+		// join方法  
+		public void join( ) throws InterruptedException; //保证线程的run方法完成后程序才继续运行
+		
+		1).新建和就绪状态
+		当程序使用new关键字创建了一个线程之后，该线程就处于新建状态，此时它和其他的Java对象一样，仅仅由Java虚拟机为其分配内存，并初始化其成员变量的值。此时的线程对象没有表现出任何线程的动态特征，程序也不会执行线程的线程执行体。
+		当线程对象调用了start()方法之后，该线程处于就绪状态。Java虚拟机会为其创建方法调用栈和程序计数器，处于这个状态中的线程并没有开始运行，只是表示该线程可以运行了。至于该线程何时开始运行，取决于JVM里线程调度器的调度。
+		调用线程对象的start()方法之后，该线程立即进入就绪状态——就绪状态相当于"等待执行"，但该线程并未真正进入运行状态。如果希望调用子线程的start()方法后子线程立即开始执行，程序可以使用Thread.sleep(1) 来让当前运行的线程（主线程）睡眠1毫秒，1毫秒就够了，因为在这1毫秒内CPU不会空闲，它会去执行另一个处于就绪状态的线程，这样就可以让子线程立即开始执行。
+		2).运行和阻塞状态
+		如果处于就绪状态的线程获得了CPU，开始执行run()方法的线程执行体，则该线程处于运行状态。
+		如果计算机只有一个CPU，那么在任何时刻只有一个线程处于运行状态，当然在一个多处理器的机器上，将会有多个线程并行执行；
+		当线程数大于处理器数时，依然会存在多个线程在同一个CPU上轮换的现象。
+		3).线程阻塞
+		当发生如下情况时，线程会进入阻塞状态
+		① 线程调用sleep()方法主动放弃所占用的处理器资源
+		② 线程调用了一个阻塞式IO方法，在该方法返回之前，该线程被阻塞
+		③ 线程试图获得一个同步监视器，但该同步监视器正被其他线程所持有。关于同步监视器的知识、后面将存更深入的介绍
+		④ 线程在等待某个通知（notify）
+		⑤ 程序调用了线程的suspend()方法将该线程挂起。但这个方法容易导致死锁，所以应该尽量避免使用该方法
+		 
+	3.Lock
+	4.线程同步
+	5.线程池
+	6.JUC库
   五.IO
   六.网络编程
   七.java高级技术
