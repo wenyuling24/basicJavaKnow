@@ -1156,19 +1156,520 @@
 		当线程数大于处理器数时，依然会存在多个线程在同一个CPU上轮换的现象。
 		3).线程阻塞
 		当发生如下情况时，线程会进入阻塞状态
-		① 线程调用sleep()方法主动放弃所占用的处理器资源
-		② 线程调用了一个阻塞式IO方法，在该方法返回之前，该线程被阻塞
-		③ 线程试图获得一个同步监视器，但该同步监视器正被其他线程所持有。关于同步监视器的知识、后面将存更深入的介绍
-		④ 线程在等待某个通知（notify）
-		⑤ 程序调用了线程的suspend()方法将该线程挂起。但这个方法容易导致死锁，所以应该尽量避免使用该方法
-		 
+		a. 线程调用sleep()方法主动放弃所占用的处理器资源
+		b. 线程调用了一个阻塞式IO方法，在该方法返回之前，该线程被阻塞
+		c. 线程试图获得一个同步监视器，但该同步监视器正被其他线程所持有。关于同步监视器的知识、后面将存更深入的介绍
+		d. 线程在等待某个通知(notify)
+		e. 程序调用了线程的suspend()方法将该线程挂起。但这个方法容易导致死锁，所以应该尽量避免使用该方法
+		4).终止线程的三种方法
+		有三种方法可以使终止线程。
+		a. 使用退出标志，使线程正常退出，也就是当run方法完成后线程终止。
+		b. 使用stop方法强行终止线程（这个方法不推荐使用，因为stop和suspend、resume一样，也可能发生不可预料的结果）。
+		c. 使用interrupt方法中断线程。
 	3.Lock
+		1).Lock和synchronized概念和区别
+		a.synchronized
+		synchronized是Java中解决并发问题的一种最常用的方法，也是最简单的一种方法。Synchronized的作用主要有三个：
+	   （1）确保线程互斥的访问同步代码
+	   （2）保证共享变量的修改能够及时可见
+	   （3）有效解决重排序问题。
+		普通同步方法，锁死当前实例对象：
+		Demo: 
+		public class SynchronizedTest {
+
+		  int a = 0;
+
+		  public synchronized void method1() {
+			a++;
+			System.out.println("Method 1 start" + a);
+			try {
+			  a++;
+			  System.out.println("Method 1 execute" + a);
+			  Thread.sleep(3000);
+			} catch (InterruptedException e) {
+			  e.printStackTrace();
+			}
+			a++;
+			System.out.println("Method 1 end" + a);
+		  }
+
+		  public synchronized void method2() {
+			a++;
+			System.out.println("Method 2 start" + a);
+			try {
+			  a++;
+			  System.out.println("Method 2 execute" + a);
+			  Thread.sleep(1000);
+			} catch (InterruptedException e) {
+			  e.printStackTrace();
+			}
+			a++;
+			System.out.println("Method 2 end" + a);
+		  }
+
+		  public static void main(String[] args) {
+			final SynchronizedTest test = new SynchronizedTest();
+
+			new Thread(new Runnable() {
+			  @Override public void run() {
+				test.method1();
+			  }
+			}).start();
+
+			new Thread(new Runnable() {
+			  @Override public void run() {
+				test.method2();
+			  }
+			}).start();
+		  }
+		}
+		-----------------------------------
+		Output:
+		Method 1 start1
+		Method 1 execute2
+		Method 1 end3
+		Method 2 start4
+		Method 2 execute5
+		Method 2 end6
+		
+		静态同步方法，锁死当前类的class对象
+		public class SynchronizedTest {
+
+		  public static synchronized void method1() {
+			System.out.println("Method 1 start");
+			try {
+			  System.out.println("Method 1 execute");
+			  Thread.sleep(3000);
+			} catch (InterruptedException e) {
+			  e.printStackTrace();
+			}
+			System.out.println("Method 1 end");
+		  }
+
+		  public static synchronized void method2() {
+			System.out.println("Method 2 start");
+			try {
+			  System.out.println("Method 2 execute");
+			  Thread.sleep(1000);
+			} catch (InterruptedException e) {
+			  e.printStackTrace();
+			}
+			System.out.println("Method 2 end");
+		  }
+
+		  public static void main(String[] args) {
+			final SynchronizedTest test = new SynchronizedTest();
+			final SynchronizedTest test2 = new SynchronizedTest();
+
+			new Thread(new Runnable() {
+			  @Override public void run() {
+				test.method1();
+			  }
+			}).start();
+
+			new Thread(new Runnable() {
+			  @Override public void run() {
+				test2.method2();
+			  }
+			}).start();
+		  }
+		}
+		---------------------------
+		Output:
+		Method 1 start
+		Method 1 execute
+		Method 1 end
+		Method 2 start
+		Method 2 execute
+		Method 2 end
+		
+		同步方法块，锁死括号里面的对象
+		public class SynchronizedTest {
+
+		  public void method1() {
+			System.out.println("Method 1 start " + System.currentTimeMillis()/1000);
+			try {
+			  synchronized (this) {
+				System.out.println("Method 1 execute"+ System.currentTimeMillis()/1000);
+				Thread.sleep(3000);
+			  }
+			} catch (InterruptedException e) {
+			  e.printStackTrace();
+			}
+			System.out.println("Method 1 end"+ System.currentTimeMillis()/1000);
+		  }
+
+		  public void method2() {
+			System.out.println("Method 2 start"+ System.currentTimeMillis()/1000);
+			try {
+			  synchronized (this) {
+				System.out.println("Method 2 execute"+ System.currentTimeMillis()/1000);
+				Thread.sleep(1000);
+			  }
+			} catch (InterruptedException e) {
+			  e.printStackTrace();
+			}
+			System.out.println("Method 2 end"+ System.currentTimeMillis()/1000);
+		  }
+
+		  public static void main(String[] args) {
+			final SynchronizedTest test = new SynchronizedTest();
+
+			new Thread(new Runnable() {
+			  @Override public void run() {
+				test.method1();
+			  }
+			}).start();
+
+			new Thread(new Runnable() {
+			  @Override public void run() {
+				test.method2();
+			  }
+			}).start();
+		  }
+		}
+		-----------------------------------
+		Output:
+		Method 1 start 1551320279
+		Method 1 execute1551320279
+		Method 2 start1551320279
+		Method 1 end1551320282
+		Method 2 execute1551320282
+		Method 2 end1551320283
+		
+		synchronize的可重入性：
+		从互斥锁的设计上来说，当一个线程试图操作一个由其他线程持有的对象锁的临界资源时，将会处于阻塞状态，但当一个线程再次请求自己持有对象锁的临界资源时，这种情况属于重入锁，请求将会成功，在java中synchronized是基于原子性的内部锁机制，是可重入的，因此在一个线程调用synchronized方法的同时在其方法体内部调用该对象另一个synchronized方法，也就是说一个线程得到一个对象锁后再次请求该对象锁，是允许的，这就是synchronized的可重入性。
+		
+		synchronized的缺陷
+		我们了解到如果一个代码块被synchronized修饰了，当一个线程获取了对应的锁，并执行该代码块时，其他线程便只能一直等待，等待获取锁的线程释放锁，而这里获取锁的线程释放锁只会有两种情况：
+　　	(1)获取锁的线程执行完了该代码块，然后线程释放对锁的占有；
+　　	(2)线程执行发生异常，此时JVM会让线程自动释放锁。
+
+　　	那么如果这个获取锁的线程由于要等待IO或者其他原因（比如调用sleep方法）被阻塞了，但是又没有释放锁，其他线程便只能干巴巴地等待，试想一下，这多么影响程序执行效率。
+　　	因此就需要有一种机制可以不让等待的线程一直无期限地等待下去（比如只等待一定的时间或者能够响应中断），通过Lock就可以办到。
+		2).Lock
+	    (1)Lock不是Java语言内置的，synchronized是Java语言的关键字，因此是内置特性。Lock是一个类，通过这个类可以实现同步访问；
+	　　(2)Lock和synchronized有一点非常大的不同，采用synchronized不需要用户去手动释放锁，当synchronized方法或者synchronized代码块执行完之后，系统会自动让线程释放对锁的占用；而Lock则必须要用户去手动释放锁，如果没有主动释放锁，就有可能导致出现死锁现象。
+		Lock是一个接口：
+		public interface Lock {
+			void lock();
+			void lockInterruptibly() throws InterruptedException;
+			boolean tryLock();
+			boolean tryLock(long time, TimeUnit unit) throws InterruptedException;
+			void unlock();
+			Condition newCondition();
+		}
+		lock()、tryLock()、tryLock(long time, TimeUnit unit)和lockInterruptibly()是用来获取锁的。unLock()方法是用来释放锁的。
+		lock()方法是平常使用得最多的一个方法，就是用来获取锁。如果锁已被其他线程获取，则进行等待。
+		由于在前面讲到如果采用Lock，必须主动去释放锁，并且在发生异常时，不会自动释放锁。因此一般来说，使用Lock必须在try{}catch{}块中进行，并且将释放锁的操作放在finally块中进行，以保证锁一定被被释放，防止死锁的发生。通常使用Lock来进行同步的话，是以下面这种形式去使用的：
+		public static void fun1(){
+			Lock lock = new ReentrantLock(true);
+			lock.lock();
+			try{
+			  //处理任务
+			  System.out.print("vgfsdzxc");
+			  
+			}catch(Exception ex){
+			  
+			}finally{
+			  lock.unlock();   //释放锁
+			}
+		}
+		tryLock()方法是有返回值的，它表示用来尝试获取锁，如果获取成功，则返回true，如果获取失败（即锁已被其他线程获取），则返回false，也就说这个方法无论如何都会立即返回。在拿不到锁时不会一直在那等待。
+		tryLock(long time, TimeUnit unit)方法和tryLock()方法是类似的，只不过区别在于这个方法在拿不到锁时会等待一定的时间，在时间期限之内如果还拿不到锁，就返回false。如果如果一开始拿到锁或者在等待期间内拿到了锁，则返回true。
+		public static void fun1(){
+			Lock lock = new ReentrantLock(true);
+			if(lock.tryLock()) {
+			  try{
+				//处理任务
+				System.out.print("fvsdxccvdsxzc");
+			  }catch(Exception ex){
+
+			  }finally{
+				lock.unlock();   //释放锁
+			  }
+			}else {
+			  //如果不能获取锁，则直接做其他事情
+			  System.out.print("aaaaaaaaaaaaaaaaaaaaaaaac");
+			}
+		}
+		lockInterruptibly()方法比较特殊，当通过这个方法去获取锁时，如果线程正在等待获取锁，则这个线程能够响应中断，即中断线程的等待状态。也就使说，当两个线程同时通过lock.lockInterruptibly()想获取某个锁时，假若此时线程A获取到了锁，而线程B只有在等待，那么对线程B调用threadB.interrupt()方法能够中断线程B的等待过程。
+　　	由于lockInterruptibly()的声明中抛出了异常，所以lock.lockInterruptibly()必须放在try块中或者在调用lockInterruptibly()的方法外声明抛出InterruptedException。
+		public static void fun1() {
+			Lock lock = new ReentrantLock(true);
+			try {
+			  lock.lockInterruptibly();
+			  //处理任务
+			  System.out.print("fvsdxccvdsxzc");
+			} catch (InterruptedException e) {
+			  e.printStackTrace();
+			} catch (Exception ex) {
+
+			} finally {
+			  lock.unlock();   //释放锁
+			}
+		 }
+		
+		注意，当一个线程获取了锁之后，是不会被interrupt()方法中断的。因为本身在前面的文章中讲过单独调用interrupt()方法不能中断正在运行过程中的线程，只能中断阻塞过程中的线程。
+　　	因此当通过lockInterruptibly()方法获取某个锁时，如果不能获取到，只有进行等待的情况下，是可以响应中断的。
+　　	而用synchronized修饰的话，当一个线程处于等待某个锁的状态，是无法被中断的，只有一直等待下去。
+		3).ReentrantLock
+		　ReentrantLock，意思是“可重入锁”.ReentrantLock是唯一实现了Lock接口的类，并且ReentrantLock提供了更多的方法。下面通过一些实例看具体看一下如何使用ReentrantLock。
+		  public class Test{
+		  private List<Integer> arrayList = new ArrayList<>();
+		  Lock lock = new ReentrantLock();    //注意这个地方
+		  public static void main(String[] args)  {
+			final Test test = new Test();
+
+			new Thread(){
+			  public void run() {
+				test.insert(Thread.currentThread());
+			  }
+			}.start();
+
+			new Thread(){
+			  public void run() {
+				test.insert(Thread.currentThread());
+			  }
+			}.start();
+		  }
+
+		  public void insert(Thread thread) {
+			//Lock lock = new ReentrantLock();    //如果放在这个地方，第二个线程会在第一个线程释放锁之前得到了锁？原因在于，在insert方法中的lock变量是局部变量，每个线程执行该方法时都会保存一个副本，那么理所当然每个线程执行到lock.lock()处获取的是不同的锁，所以就不会发生冲突。
+			lock.lock();
+			try {
+			  System.out.println(thread.getName()+"得到了锁");
+			  for(int i=0;i<5000;i++) {
+				arrayList.add(i);
+			  }
+			} catch (Exception e) {
+			  // TODO: handle exception
+			}finally {
+			  System.out.println(thread.getName()+"释放了锁");
+			  lock.unlock();
+			}
+		  }
+		  }
+		  -------------------------------------
+		  Output:
+			Thread-0得到了锁
+			Thread-0释放了锁
+			Thread-1得到了锁
+			Thread-1释放了锁
+			将lock声明为类的属性,这样就是正确地使用Lock的方法了。
+  
+		 tryLock()的使用方法
+		 public class Test {
+
+		  private ArrayList<Integer> arrayList = new ArrayList<Integer>();
+		  private Lock lock = new ReentrantLock();    //注意这个地方
+		  public static void main(String[] args)  {
+			final Test test = new Test();
+
+			new Thread(){
+			  public void run() {
+				test.insert(Thread.currentThread());
+			  };
+			}.start();
+
+			new Thread(){
+			  public void run() {
+				test.insert(Thread.currentThread());
+			  };
+			}.start();
+		  }
+
+		  public void insert(Thread thread) {
+			if(lock.tryLock()) {
+			  try {
+				System.out.println(thread.getName()+"得到了锁");
+				for(int i=0;i<5;i++) {
+				  arrayList.add(i);
+				}
+			  } catch (Exception e) {
+				// TODO: handle exception
+			  }finally {
+				System.out.println(thread.getName()+"释放了锁");
+				lock.unlock();
+			  }
+			} else {
+			  System.out.println(thread.getName()+"获取锁失败");
+			}
+		  }
+		}
+		
+		lockInterruptibly()响应中断的使用方法：
+		public class Test {
+
+		  private Lock lock = new ReentrantLock();
+
+		  public static void main(String[] args)  {
+			Test test = new Test();
+			MyThread thread1 = new MyThread(test);
+			MyThread thread2 = new MyThread(test);
+			thread1.start();
+			thread2.start();
+
+			try {
+			  Thread.sleep(2000);
+			} catch (InterruptedException e) {
+			  e.printStackTrace();
+			}
+			thread2.interrupt();
+		  }
+
+		  public void insert(Thread thread) throws InterruptedException{
+			lock.lockInterruptibly();   //注意，如果需要正确中断等待锁的线程，必须将获取锁放在外面，然后将InterruptedException抛出
+			try {
+			  System.out.println(thread.getName()+"得到了锁");
+			  long startTime = System.currentTimeMillis();
+			  for(    ;     ;) {
+				if(System.currentTimeMillis() - startTime >= Integer.MAX_VALUE)
+				  break;
+				//插入数据
+			  }
+			}
+			finally {
+			  System.out.println(Thread.currentThread().getName()+"执行finally");
+			  lock.unlock();
+			  System.out.println(thread.getName()+"释放了锁");
+			}
+		  }
+		}
+
+		class MyThread extends Thread {
+		  private Test test = null;
+		  public MyThread(Test test) {
+			this.test = test;
+		  }
+		  @Override
+		  public void run() {
+
+			try {
+			  test.insert(Thread.currentThread());
+			} catch (InterruptedException e) {
+			  System.out.println(Thread.currentThread().getName()+"被中断");
+			}
+		  }
+		}
+		
+		---------------------
+		Output：
+		Thread-0得到了锁
+		Thread-1被中断
+
+		运行之后，发现thread2能够被正确中断。
+		
+		4).ReadWriteLock
+		ReadWriteLock也是一个接口，在它里面只定义了两个方法：
+		public interface ReadWriteLock {
+			/**
+			 * Returns the lock used for reading.
+			 *
+			 * @return the lock used for reading.
+			 */
+			Lock readLock();
+		 
+			/**
+			 * Returns the lock used for writing.
+			 *
+			 * @return the lock used for writing.
+			 */
+			Lock writeLock();
+		}
+		一个用来获取读锁，一个用来获取写锁。也就是说将文件的读写操作分开，分成2个锁来分配给线程，从而使得多个线程可以同时进行读操作。下面的ReentrantReadWriteLock实现了ReadWriteLock接口。
+		
+		5).ReentrantReadWriteLock
+		读写锁将对一个资源（比如文件）的访问分成了2个锁，一个读锁和一个写锁。
+		ReentrantReadWriteLock里面提供了很多丰富的方法，不过最主要的有两个方法：readLock()和writeLock()用来获取读锁和写锁。
+　　    下面通过几个例子来看一下ReentrantReadWriteLock具体用法。
+	 	假如有多个线程要同时进行操作的话，先看一下synchronized达到的效果：
+		public class Test {
+
+		  public static void main(String[] args)  {
+			final Test test = new Test();
+
+			new Thread(){
+			  public void run() {
+				test.get(Thread.currentThread());
+			  };
+			}.start();
+
+			new Thread(){
+			  public void run() {
+				test.get(Thread.currentThread());
+			  };
+			}.start();
+
+		  }
+
+		  public synchronized void get(Thread thread) {
+			long start = System.currentTimeMillis();
+			while(System.currentTimeMillis() - start <= 1) {
+			  System.out.println(thread.getName()+"正在进行读操作");
+			}
+			System.out.println(thread.getName()+"读操作完毕");
+		  }
+		}
+		
+		---------------------------
+		使用synchronized来修饰方法，并不能达到多个线程同时操作的目的，他是第一个线程操作进行完毕，然后再进行第二个线程的操作
+
+		使用读写锁：
+		public class Test {
+
+		  private ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
+
+		  public static void main(String[] args)  {
+			final Test test = new Test();
+
+			new Thread(){
+			  public void run() {
+				test.get(Thread.currentThread());
+			  };
+			}.start();
+
+			new Thread(){
+			  public void run() {
+				test.get(Thread.currentThread());
+			  };
+			}.start();
+
+		  }
+
+		  public  void get(Thread thread) {
+			rwl.readLock().lock();
+			try {
+			  long start = System.currentTimeMillis();
+			  while(System.currentTimeMillis() - start <= 1) {
+				System.out.println(thread.getName()+"正在进行读操作");
+			  }
+			  System.out.println(thread.getName()+"读操作完毕");
+			}finally {
+			  rwl.readLock().unlock();
+			}
+
+		  }
+		}
+		--------------------------------
+		使用读写锁，能达到两个线程同时操作的目的
+		
+		6).Lock和synchronized的选择
+		总结来说，Lock和synchronized有以下几点不同：
+　　	a.Lock是一个接口，而synchronized是Java中的关键字，synchronized是内置的语言实现；
+　　	b.synchronized在发生异常时，会自动释放线程占有的锁，因此不会导致死锁现象发生；而Lock在发生异常时，如果没有主动通过unLock()去释放锁，则很可能造成死锁现象，因此使用Lock时需要在finally块中释放锁；
+　　	c.Lock可以让等待锁的线程响应中断，而synchronized却不行，使用synchronized时，等待的线程会一直等待下去，不能够响应中断；
+　　	d.通过Lock可以知道有没有成功获取锁，而synchronized却无法办到。
+　　	e.Lock可以提高多个线程进行读操作的效率。
+　　	在性能上来说，如果竞争资源不激烈，两者的性能是差不多的，而当竞争资源非常激烈时（即有大量线程同时竞争），此时Lock的性能要远远优于synchronized。所以说，在具体使用时要根据适当情况选择。
+		
+		
 	4.线程同步
 	5.线程池
 	6.JUC库
   五.IO
   六.网络编程
-  七.java高级技术
+  七.java高级技术(加个递归)
 		   
 		   
 		   
