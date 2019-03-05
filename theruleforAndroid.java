@@ -2035,21 +2035,668 @@
 		  }
 		},0,2, TimeUnit.SECONDS);
 	  }
+	  3).线程池的实现原理
+	    a.通过看JDK源码可以知道上边五种类型的线程池创建无论哪种最后都是ThreadPoolExecutor类的封装，我们来看下ThreadPoolExecutor最原始的构造函数，和调度execute源码：
+		/**
+		 * 1,corePoolSize：指定线程池中活跃的线程数量
+		 * 2,maximumPoolSize：指定线程池中最大线程数量
+		 * 3,keepAliveTime：超过corePoolSize个多余线程的存活时间
+		 * 4,unit：keepAliveTime的时间单位
+		 * 5,workQueue：任务队列，被提交但尚未被执行的任务
+		 * 6,threadFactory：线程工厂，用于创建线程
+		 * 7,handler拒绝策略：当任务太多来不及处理时，如何拒绝任务
+		 */
+		public ThreadPoolExecutor(int corePoolSize,
+									  int maximumPoolSize,
+									  long keepAliveTime,
+									  TimeUnit unit,
+									  BlockingQueue<Runnable> workQueue,
+									  ThreadFactory threadFactory,
+									  RejectedExecutionHandler handler) {
+				if (corePoolSize < 0 ||
+					maximumPoolSize <= 0 ||
+					maximumPoolSize < corePoolSize ||
+					keepAliveTime < 0)
+					throw new IllegalArgumentException();
+				if (workQueue == null || threadFactory == null || handler == null)
+					throw new NullPointerException();
+				this.acc = System.getSecurityManager() == null ?
+						null :
+						AccessController.getContext();
+				this.corePoolSize = corePoolSize;
+				this.maximumPoolSize = maximumPoolSize;
+				this.workQueue = workQueue;
+				this.keepAliveTime = unit.toNanos(keepAliveTime);
+				this.threadFactory = threadFactory;
+				this.handler = handler;
+			}
+		 
+		 
+		 
+		/**
+		 * 三步：1，创建线程直到corePoolSize；2，加入任务队列；3，如果还是执行不过来，则执行拒绝策略
+		 */
+		public void execute(Runnable command) {
+				if (command == null)
+					throw new NullPointerException();
+				/*
+				 * Proceed in 3 steps:
+				 *
+				 * 1. If fewer than corePoolSize threads are running, try to
+				 * start a new thread with the given command as its first
+				 * task.  The call to addWorker atomically checks runState and
+				 * workerCount, and so prevents false alarms that would add
+				 * threads when it shouldn't, by returning false.
+				 *
+				 * 2. If a task can be successfully queued, then we still need
+				 * to double-check whether we should have added a thread
+				 * (because existing ones died since last checking) or that
+				 * the pool shut down since entry into this method. So we
+				 * recheck state and if necessary roll back the enqueuing if
+				 * stopped, or start a new thread if there are none.
+				 *
+				 * 3. If we cannot queue task, then we try to add a new
+				 * thread.  If it fails, we know we are shut down or saturated
+				 * and so reject the task.
+				 */
+				int c = ctl.get();
+				if (workerCountOf(c) < corePoolSize) {
+					if (addWorker(command, true))
+						return;
+					c = ctl.get();
+				}
+				if (isRunning(c) && workQueue.offer(command)) {
+					int recheck = ctl.get();
+					if (! isRunning(recheck) && remove(command))
+						reject(command);
+					else if (workerCountOf(recheck) == 0)
+						addWorker(null, false);
+				}
+				else if (!addWorker(command, false))
+					reject(command);
+			}
+
+		b.workQueue，当任务被提交但尚未被执行的任务队列，是一个BlockingQueue接口的对象，只存放Runnable对象
+		根据队列功能分类，看下JDK提供的几种BlockingQueue：
+		SynchronousQueue:直接提交队列：没有容量，每一个插入操作都要等待一个相应的删除操作。通常使用需要将maximumPoolSize的值设置很大，否则很容易触发拒绝策略。
+		ArrayBlockingQueue:有界的任务队列：任务大小通过入参 int capacity决定，当填满队列后才会创建大于corePoolSize的线程。
+		LinkedBlockingQueue:无界的任务队列：线程个数最大为corePoolSize，如果任务过多，则不断扩充队列，知道内存资源耗尽。
+		PriorityBlockingQueue:优先任务队列：是一个无界的特殊队列，可以控制任务执行的先后顺序，而上边几个都是先进先出的策略。
+		
+		c.ThreadFactory是用来创建线程池中的线程工厂类
+		public class ThreadFactoryDemo {
+
+		  static class DefaultThreadFactory implements ThreadFactory {
+
+			private static final AtomicInteger poolNumber = new AtomicInteger(1);
+			private final ThreadGroup group;
+			private final AtomicInteger threadNumber = new AtomicInteger(1);
+			private final String namePrefix;
+
+			DefaultThreadFactory() {
+			  SecurityManager s = System.getSecurityManager();
+			  group = (s != null) ? s.getThreadGroup() :
+				  Thread.currentThread().getThreadGroup();
+			  namePrefix = "pool-" +
+				  poolNumber.getAndIncrement() +
+				  "-thread-";
+			}
+
+			@Override public Thread newThread(@NonNull Runnable runnable) {
+			  Thread t = new Thread(group, runnable,
+				  namePrefix + threadNumber.getAndIncrement(),
+				  0);
+			  if (t.isDaemon())
+				t.setDaemon(false);
+			  if (t.getPriority() != Thread.NORM_PRIORITY)
+				t.setPriority(Thread.NORM_PRIORITY);
+			  return t;
+			}
+
+		  }
+
+		  public static class MyTask implements Runnable{
+
+			public void run() {
+			  System.out.println(System.currentTimeMillis() + " Thread Name:" + Thread.currentThread().getName());
+
+			  try {
+				Thread.sleep(1000);
+			  } catch (InterruptedException e) {
+				e.printStackTrace();
+			  }
+			}
+		  }
+
+		  public static void main(String[] args) {
+			 MyTask myTask = new MyTask();
+			ExecutorService es = new ThreadPoolExecutor(5, 5, 0L, TimeUnit.MILLISECONDS, 
+			new LinkedBlockingQueue<Runnable>(), new DefaultThreadFactory() {//LinkedBlockingQueue	无界的任务队列：线程个数最大为corePoolSize，如果任务过多，则不断扩充队列，知道内存资源耗尽。
+			  public Thread newThread(Runnable r) {
+				Thread t =new Thread(r);
+				t.setDaemon(true);
+				System.out.println(System.currentTimeMillis() + " create thread:" + t.getName());
+				return  t;
+			  }
+			});
+			for (int i = 0; i < 10 ; i++) {
+			  es.submit(myTask);
+			}
+
+		  }
+
+		}
+		--------------------------------------------
+		Output:
+		1551749560466 create thread:Thread-0
+		1551749560466 create thread:Thread-1
+		1551749560466 create thread:Thread-2
+		1551749560466 create thread:Thread-3
+		1551749560485 create thread:Thread-4
+		1551749560486 Thread Name:Thread-0
+		1551749560486 Thread Name:Thread-2
+		1551749560487 Thread Name:Thread-1
+		1551749560488 Thread Name:Thread-4
+		d.拒绝策略:
+		在使用线程池并且使用有界队列的时候，如果队列满了，任务添加到线程池的时候就会有问题
+		如果线程池处理速度达不到任务的出现速度时，只能执行拒绝策略
+		中止策略(Abort Policy)：默认的策略，队列满时，会抛出异常RejectedExecutionException，调用者在捕获异常之后自行判断如何处理该任务；
+		抛弃策略(Discard Policy)：队列满时，进程池抛弃新任务，并不通知调用者；
+		抛弃最久策略(Discard-oldest Policy)：队列满时，进程池将抛弃队列中被提交最久的任务；
+		调用者运行策略(Caller-Runs Policy)：该策略不会抛弃任务，也不会抛出异常，而是将任务退还给调用者，也就是说当队列满时，新任务将在调用ThreadPoolExecutor的线程中执行。
+
+		AbortPolicy:该策略是线程池的默认策略。使用该策略时，如果线程池队列满了丢掉这个任务并且抛出RejectedExecutionException异常。
+		public static void main(String[] args) {
+			MyTask myTask = new MyTask();
+			ExecutorService es = new ThreadPoolExecutor(5, 5, 0L, TimeUnit.MILLISECONDS,
+				new ArrayBlockingQueue<Runnable>(2), new ThreadFactory() {
+			  public Thread newThread(Runnable r) {
+				Thread t =new Thread(r);
+				t.setDaemon(true);
+				System.out.println(System.currentTimeMillis() + " create thread:" + t.getName());
+				return  t;
+			  }
+			},new RejectedExecutionHandler() {
+			  public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+				System.out.println("Task " + r.toString() +
+					" rejected from " +
+					executor.toString());
+			  }
+			});
+			for (int i = 0; i < 10 ; i++) {
+			  es.submit(myTask);
+			}
+
+		  }
+		  --------------------------------------
+		  Output:
+			1551754686988 create thread:Thread-0
+			1551754686989 create thread:Thread-1
+			1551754686990 create thread:Thread-2
+			1551754686990 create thread:Thread-3
+			1551754686990 create thread:Thread-4
+			1551754686990 Thread Name:Thread-1
+			1551754686990 Thread Name:Thread-0
+			Task java.util.concurrent.FutureTask@3cd1a2f1 rejected from java.util.concurrent.ThreadPoolExecutor@2f0e140b[Running, pool size = 5, active threads = 5, queued tasks = 2, completed tasks = 0]
+			Task java.util.concurrent.FutureTask@7440e464 rejected from java.util.concurrent.ThreadPoolExecutor@2f0e140b[Running, pool size = 5, active threads = 5, queued tasks = 2, completed tasks = 0]
+			Task java.util.concurrent.FutureTask@49476842 rejected from java.util.concurrent.ThreadPoolExecutor@2f0e140b[Running, pool size = 5, active threads = 5, queued tasks = 2, completed tasks = 0]
+			1551754686991 Thread Name:Thread-4
+
+			
+		DiscardPolicy:这个策略和AbortPolicy的slient版本，如果线程池队列满了，会直接丢掉这个任务并且不会有任何异常。
+		 public static void main(String[] args) {
+			MyTask myTask = new MyTask();
+			ExecutorService es = new ThreadPoolExecutor(5, 5, 0L, TimeUnit.MILLISECONDS,
+				new ArrayBlockingQueue<Runnable>(2), new ThreadFactory() {
+			  public Thread newThread(Runnable r) {
+				Thread t =new Thread(r);
+				t.setDaemon(true);
+				System.out.println(System.currentTimeMillis() + " create thread:" + t.getName());
+				return  t;
+			  }
+			},new RejectedExecutionHandler() {
+			  public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+				//就是一个空的方法
+			  }
+			});
+			for (int i = 0; i < 10 ; i++) {
+			  es.submit(myTask);
+			}
+		  }
+		  ----------------------------
+		  Output:
+			1551754800358 create thread:Thread-0
+			1551754800360 create thread:Thread-1
+			1551754800360 create thread:Thread-2
+			1551754800360 create thread:Thread-3
+			1551754800360 create thread:Thread-4
+			1551754800360 Thread Name:Thread-0
+			
+		DiscardOldestPolicy:这个策略从字面上也很好理解，丢弃最老的。也就是说如果队列满了，会将最早进入队列的任务删掉腾出空间，再尝试加入队列。
+		因为队列是队尾进，队头出，所以队头元素是最老的，因此每次都是移除对头元素后再尝试入队。
+		public static void main(String[] args) {
+			MyTask myTask = new MyTask();
+			ExecutorService es = new ThreadPoolExecutor(5, 5, 0L, TimeUnit.MILLISECONDS,
+				new ArrayBlockingQueue<Runnable>(2), new ThreadFactory() {
+			  public Thread newThread(Runnable r) {
+				Thread t =new Thread(r);
+				t.setDaemon(true);
+				System.out.println(System.currentTimeMillis() + " create thread:" + t.getName());
+				return  t;
+			  }
+			},new RejectedExecutionHandler() {
+			  public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+				if (!executor.isShutdown()) {
+				  //移除队头元素
+				  executor.getQueue().poll();
+				  //再尝试入队
+				  executor.execute(r);
+				}
+			  }
+			});
+			for (int i = 0; i < 10 ; i++) {
+			  es.submit(myTask);
+			}
+		  }
+		  -----------------------------------------------
+		  Output:
+			1551754881512 create thread:Thread-0
+			1551754881513 create thread:Thread-1
+			1551754881513 create thread:Thread-2
+			1551754881513 create thread:Thread-3
+			1551754881514 Thread Name:Thread-0
+			1551754881514 create thread:Thread-4
+			1551754881514 Thread Name:Thread-1
+			1551754881514 Thread Name:Thread-2
+			1551754881515 Thread Name:Thread-4
+			
+		CallerRunsPolicy:使用此策略，如果添加到线程池失败，那么主线程会自己去执行该任务，不会等待线程池中的线程去执行。就像是个急脾气的人，我等不到别人来做这件事就干脆自己干。
+		public static void main(String[] args) {
+			MyTask myTask = new MyTask();
+			ExecutorService es = new ThreadPoolExecutor(5, 5, 0L, TimeUnit.MILLISECONDS,
+				new ArrayBlockingQueue<Runnable>(2), new ThreadFactory() {
+			  public Thread newThread(Runnable r) {
+				Thread t =new Thread(r);
+				t.setDaemon(true);
+				System.out.println(System.currentTimeMillis() + " create thread:" + t.getName());
+				return  t;
+			  }
+			},new RejectedExecutionHandler() {
+			  public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+				if (!executor.isShutdown()) {
+				  //直接执行run方法
+				  r.run();
+				}
+
+			  }
+			});
+			for (int i = 0; i < 10 ; i++) {
+			  es.submit(myTask);
+			}
+		  }
+		  -----------------------------------------
+		  Output:
+			1551754985190 create thread:Thread-0
+			1551754985191 create thread:Thread-1
+			1551754985191 create thread:Thread-2
+			1551754985191 create thread:Thread-3
+			1551754985191 create thread:Thread-4
+			1551754985192 Thread Name:main
+			1551754985196 Thread Name:Thread-0
+			1551754985197 Thread Name:Thread-4
+			1551754985197 Thread Name:Thread-2
+			1551754985197 Thread Name:Thread-1
+			1551754985198 Thread Name:Thread-3
+			1551754986192 Thread Name:main
+			1551754986197 Thread Name:Thread-1
+			1551754986197 Thread Name:Thread-4
+			1551754987192 Thread Name:Thread-2
+			
+			
+		一个完整的阻塞or非阻塞线程池的Demo:
+		public class CustomThreadPoolExecutor {
+
+		  private ThreadPoolExecutor pool = null;
+
+		  /**
+		   * ?
+		   * ??????线程池初始化方法?
+		   * ???????
+		   * ??????corePoolSize?核心线程池大小----10?
+		   * ??????maximumPoolSize?最大线程池大小----30?
+		   * ??????keepAliveTime?线程池中超过corePoolSize数目的空闲线程最大存活时间----30+单位TimeUnit?
+		   * ??????TimeUnit?keepAliveTime时间单位----TimeUnit.MINUTES?
+		   * ??????workQueue?阻塞队列----new?ArrayBlockingQueue<Runnable>(10)====10容量的阻塞队列?
+		   * ??????threadFactory?新建线程工厂----new?CustomThreadFactory()====定制的线程工厂?
+		   * ??????rejectedExecutionHandler?饱和策略 当提交任务数超过maxmumPoolSize+workQueue之和时,?
+		   * ???????????????????????????????即当提交第41个任务时(前面线程都没有执行完,此测试方法中用sleep(100)),?
+		   * ?????????????????????????????????????任务会交给RejectedExecutionHandler来处理?
+		   * ?????
+		   */
+		  public void init() {
+			pool = new ThreadPoolExecutor(
+			  10,
+			  30,
+			  30,
+			  TimeUnit.SECONDS,
+			  new ArrayBlockingQueue<Runnable>(10),
+			  new CustomThreadFactory(),
+			  new CustomRejectedExecutionHandler()
+			);
+		  }
+
+		  public void onDestory() {
+			if(pool != null){
+			  pool.shutdownNow();
+			}
+		  }
+
+		  public ExecutorService getCustomThreadPoolExecutor() {
+			return this.pool;
+		  }
+
+		  private class CustomThreadFactory implements ThreadFactory {
+			private AtomicInteger count = new AtomicInteger(0);
+
+			@Override public Thread newThread(@NonNull Runnable runnable) {
+			  Thread t = new Thread(runnable);
+			  String threadName = CustomThreadPoolExecutor.class.getSimpleName() + count.addAndGet(1);
+			  System.out.println(threadName);
+			  t.setName(threadName);
+			  return t;
+			}
+		  }
+
+		  private class CustomRejectedExecutionHandler implements RejectedExecutionHandler {
+
+			@Override
+			public void rejectedExecution(Runnable runnable, ThreadPoolExecutor threadPoolExecutor) {
+			  // 这里来操作拒绝策略
+			  //记录异常
+			  //DiscardOldestPolicy策略: 线程队列不够就先进先出
+			  // 简单来说 这里不处理就是非阻塞线程池，执行的任务数超过maxmumPoolSize+workQueu就不正常执行了;处理了就是阻塞线程池，如下所示：
+			  if (!threadPoolExecutor.isShutdown()) {
+				////移除队头元素
+				//threadPoolExecutor.getQueue().poll();
+				////再尝试入队
+				//threadPoolExecutor.execute(runnable);
+				//System.out.println("error.............");
+				try {
+				  threadPoolExecutor.getQueue().put(runnable);
+				} catch (InterruptedException e) {
+				  e.printStackTrace();
+				}
+			  }
+
+			}
+		  }
+
+		  public static void main(String[] args) {
+			CustomThreadPoolExecutor executor = new CustomThreadPoolExecutor();
+			executor.init();
+
+			ExecutorService pool = executor.getCustomThreadPoolExecutor();
+			for (int i = 0; i < 100; i++) {
+
+			  System.out.println("提交的第" + i + "个任务");
+			  pool.execute(new Runnable() {
+				@Override public void run() {
+				  try {
+					Thread.sleep(300);
+				  } catch (InterruptedException e) {
+					e.printStackTrace();
+				  }
+				}
+			  });
+			}
+
+			//1.销毁----此处不能销毁,因为任务没有提交执行完,如果销毁线程池,任务也就无法执行了
+			//executor.onDestory();
+
+			try {
+			  Thread.sleep(10000);
+			} catch (InterruptedException e) {
+			  e.printStackTrace();
+			}
+		  }
+		}
+		
+		e.线程池的扩展：JDK已经对线程池做了非常好的编写，如果我们想扩展怎么办呢？
+		ThreadPoolExecutor提供了三个方法供我们使用：
+		beforeExecute()每个线程执行前，
+		afterExecute()每个线程执行后，
+		terminated()线程池退出时。
+		我们只要对这个三方法进行重写即可：
+		 public static void main(String[] args) throws InterruptedException {
+		   MyTask myTask = new MyTask();
+			ExecutorService es = new ThreadPoolExecutor(5, 5, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10)){
+			  @Override
+			  protected void beforeExecute(Thread t, Runnable r) {
+				System.out.println("准备执行线程：" + r.toString() +"==="  + t.getName());
+			  }
+
+			  @Override
+			  protected void afterExecute(Runnable r, Throwable t) {
+				System.out.println("执行完成线程：" + r.toString());
+			  }
+
+			  @Override
+			  protected void terminated() {
+				System.out.println("线程池退出" );
+			  }
+			};
+			for (int i = 0; i < 10 ; i++) {
+			  es.submit(myTask);
+			}
+			Thread.sleep(3000);
+			es.shutdown();
+		  }
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+		f.线程数量的优化：线程池的大小对系统性能有一定的影响，过大或者过小都无法发挥系统的最佳性能。但是也没有必要做的特别精确，只是不要太大，不要太小即可。我们可以根据此公式进行粗略计算：线程池个数=CPU的数量*CPU的使用率*（1+等待时间/计算时间）。当然了还需要根据实际情况，积累实际经验，来进行判断。
+		g.线程池中的堆栈信息:
+		Demo：
+		public class ExceptionThreadPoolDemo {
+		  public static class MyTask implements Runnable {
+			int a, b;
+
+			public MyTask(int a, int b) {
+			  this.a = a;
+			  this.b = b;
+			}
+
+			public void run() {
+
+			  double re = a / b;
+			  System.out.println(re);
+
+			}
+		  }
+		  public static void main(String[] args) {
+			//ExecutorService es = new TraceThreadPoolExecutor(0,Integer.MAX_VALUE,0L, TimeUnit.SECONDS,new SynchronousQueue<Runnable>());
+			ExecutorService es = new ThreadPoolExecutor(0,Integer.MAX_VALUE,0L, TimeUnit.SECONDS,new SynchronousQueue<Runnable>());
+			for (int i = 0; i < 5; i++) {
+			  //不进行日志打印
+			  //es.submit(new MyTask(100,i));
+			  //进行日志打印，只是打印了具体方法错误：Exception in thread "pool-1-thread-1" java.lang.ArithmeticException: / by zero
+			  //	at com.ljh.thread.thread_pool.ExceptionThreadPoolDemo$MyTask.run(ExceptionThreadPoolDemo.java:24)
+			  //	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+			  //	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+			  //	at java.lang.Thread.run(Thread.java:748)
+			  //es.submit(new MyTask(100,i));
+			  es.execute(new MyTask(100, i));
+			}
+
+		  }
+		}
+		-----------------------------
+		本来除数有一个是0会异常，使用execute还好，若使用submit,异常就被吃了
+		这就是我们常说的Runnable没有返回值，不能抛出受检查的异常。
+		但是这样的异常只告诉我们异常是哪里抛出的，看不到任务是在哪里提交的
+		所以扩展ThreadPoolExecutor，重写submit方法和execute方法
+		
+		public class TraceThreadPoolExecutor extends ThreadPoolExecutor {
+
+		  public TraceThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
+			  BlockingQueue<Runnable> workQueue) {
+			super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
+		  }
+
+		  @Override
+		  public void execute(Runnable command) {
+			super.execute(wrap(command,clientTrace(),Thread.currentThread().getName()));
+		  }
+
+		  private Runnable wrap(final Runnable command, final Exception clientTrace, String Threadname) {
+			return new Runnable(){
+
+			  @Override
+			  public void run() {
+				try{
+				  command.run();//执行原本任务捕获异常
+				}catch(Exception e){
+				  clientTrace.printStackTrace();
+				  throw e;// 抛出原本任务的异常
+				}
+			  }
+
+			};
+		  }
+
+		  private Exception clientTrace() {
+			return new Exception("Client stack trace");
+		  }
+
+		  @Override
+		  public Future<?> submit(Runnable task) {
+			return super.submit(wrap(task,clientTrace(),Thread.currentThread().getName()));
+
+		  }
+		}
+		
+		main方法
+		public static void main(String[] args) {
+			ExecutorService es = new TraceThreadPoolExecutor(0,Integer.MAX_VALUE,0L, TimeUnit.SECONDS,new SynchronousQueue<Runnable>());
+			for (int i = 0; i < 5; i++) {
+			  //es.submit(new MyTask(100,i));
+			  es.execute(new MyTask(100, i));
+			}
+		  }
+
+		h.分而治之：Fork/Join：大家都知道hadoop中的Map-Reduce分开处理，合并结果；当今流行的分布式，将用户的请求分散处理等等。分而治之是非常有用实用的。
+		JDK帮我们提供了ForkJoinPool线程池，供我们做这些处理.
+		ForkJoin主要提供了两个主要的执行任务的接口。RecurisiveAction与RecurisiveTask 。
+		RecurisiveAction ：没有返回值的接口。
+		RecurisiveTask ：带有返回值的接口。
+		相对于一般的线程池实现,fork/join框架的优势体现在对其中包含的任务的处理方式上.在一般的线程池中,如果一个线程正在执行的任务由于某些原因无法继续运行,那么该线程会处于等待状态.而在fork/join框架实现中,如果某个子问题由于等待另外一个子问题的完成而无法继续运行.那么处理该子问题的线程会主动寻找其他尚未运行的子问题来执行.这种方式减少了线程的等待时间,提高了性能.
+ 
+		Demo1:
+		@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+		public class ForkJoinPoolDemo {
+		  class SendMsgTask extends RecursiveAction {
+
+			private final int THRESHOLD = 100;
+
+			private int start;
+			private int end;
+			private List<String> list;
+
+			public SendMsgTask(int start, int end, List<String> list) {
+			  this.start = start;
+			  this.end = end;
+			  this.list = list;
+			}
+
+			@Override
+			protected void compute() {
+
+			  if ((end - start) <= THRESHOLD) {
+				for (int i = start; i < end; i++) {
+				  System.out.println(Thread.currentThread().getName() + ": " + list.get(i));
+				}
+			  }else {
+				int middle = (start + end) / 2;
+				invokeAll(new SendMsgTask(start, middle, list), new SendMsgTask(middle, end, list));
+			  }
+
+			}
+
+		  }
+
+		  public static void main(String[] args) throws InterruptedException {
+			List<String> list = new ArrayList<>();
+			for (int i = 0; i < 1000; i++) {
+			  list.add(String.valueOf(i+1));
+			}
+
+			ForkJoinPool pool = new ForkJoinPool();
+			pool.submit(new ForkJoinPoolDemo().new SendMsgTask(0, list.size(), list));
+			pool.awaitTermination(10, TimeUnit.SECONDS);
+			pool.shutdown();
+		  }
+
+		}
+
+		Demo2:
+		@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+		public class ForkJoinPoolDemo {
+		  private class SumTask extends RecursiveTask<Integer> {
+
+			private static final int THRESHOLD = 20;
+
+			private int arr[];
+			private int start;
+			private int end;
+
+			public SumTask(int[] arr, int start, int end) {
+			  this.arr = arr;
+			  this.start = start;
+			  this.end = end;
+			}
+
+			/**
+			 * 小计
+			 */
+			private Integer subtotal() {
+			  Integer sum = 0;
+			  for (int i = start; i < end; i++) {
+				sum += arr[i];
+			  }
+			  System.out.println(Thread.currentThread().getName() + ": ∑(" + start + "~" + end + ")=" + sum);
+			  return sum;
+			}
+
+			@Override
+			protected Integer compute() {
+
+			  if ((end - start) <= THRESHOLD) {
+				return subtotal();
+			  }else {
+				int middle = (start + end) / 2;
+				SumTask left = new SumTask(arr, start, middle);
+				SumTask right = new SumTask(arr, middle, end);
+				left.fork();
+				right.fork();
+
+				return left.join() + right.join();
+			  }
+			}
+		  }
+
+		  public static void main(String[] args) throws ExecutionException, InterruptedException {
+			int[] arr = new int[1000];
+			for (int i = 0; i < 1000; i++) {
+			  arr[i] = i + 1;
+			}
+
+			ForkJoinPool pool = new ForkJoinPool();
+			ForkJoinTask<Integer> result = pool.submit(new ForkJoinPoolDemo().new SumTask(arr, 0, arr.length));
+			System.out.println("最终计算结果: " + result.invoke());
+			pool.shutdown();
+		  }
+
+		}
+
+
 	6.JUC库
   五.IO
   六.网络编程
