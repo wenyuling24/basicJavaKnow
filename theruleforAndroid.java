@@ -2696,9 +2696,123 @@
 
 		}
 
-
 	6.JUC库
-  五.IO
+	 1).JUC简介:在 Java 5.0 提供了 java.util.concurrent （简称JUC ）包，在此包中增加了在并发编程中很常用的实用工具类，用于定义类似于线程的自定义子系统，包括线程池、异步 IO 和轻量级任务框架。提供可调的、灵活的线程池。还提供了设计用于多线程上下文中的 Collection 实现等。
+	 2).volatile关键字：当多个线程进行操作共享数据时,可以保证内存中的数据是可见的;相较于 synchronized 是一种较为轻量级的同步策略;
+		在多个线程共享单个变量时可以使用
+	 3).原子量 变量 CAS 算法
+		a.原子变量
+		类 AtomicBoolean、AtomicInteger、AtomicLong 和 AtomicReference 的实例各自提供对相应类型单个变量的访问和更新。每个类也为该类型提供适当的实用工具方法。AtomicIntegerArray、AtomicLongArray 和 AtomicReferenceArray 类进一步扩展了原子操作，对这些类型的数组提供了支持。这些类在为其数组元素提供 volatile 访问语义方面也引人注目，这对于普通数组来说是不受支持的。核心方法：boolean compareAndSet(expectedValue, updateValue)
+		
+		public class TestAtomicDemo {
+		  public static void main(String[] args){
+
+			AtomicDemo ad = new AtomicDemo();
+
+			for(int i=0; i < 10; i++){
+			  new Thread(ad).start();
+			}
+		  }
+		}
+
+		class AtomicDemo implements Runnable{
+		  private AtomicInteger atomicInteger = new AtomicInteger(0);
+
+		  public void run(){
+
+			try{
+			  Thread.sleep(200);
+			}catch(InterruptedException e){
+
+			}
+
+			System.out.println(Thread.currentThread().getName() + ":" + getSerialNumber());
+		  }
+
+		  public int getSerialNumber(){
+			return atomicInteger.getAndIncrement();//原子变量的自增运算
+		  }
+		}
+		b.CAS算法：Compare and Swap比较并交换。总共由三个操作数，一个内存值v，一个线程本地内存旧值a（期望操作前的值）和一个新值b，在操作期间先拿旧值a和内存值v比较有没有发生变化，如果没有发生变化，才能内存值v更新成新值b，发生了变化则不交换。
+		CAS虽然很高效的解决原子操作，但是CAS仍然存在三大问题：ABA问题、循环时间长开销大、只能保证一个共享变量的原子操作。
+	  4).并发容器
+		a.ConcurrentHashMap
+		  ConcurrentHashMap它引入了一个“分段锁”的概念，具体可以理解为把一个大的Map拆分成N个小的HashTable，根据key.hashCode()来决定把key放到哪个HashTable中
+		  ConcurrentHashMap和HashMap的比较：Hashmap是哈希表的map实现，可操作null键和null值，是非线程安全的，ConcurrentHashMap 是线程安全的;储存方式是:key所对应的value值链接成一个链表，而数组中储存的是链表第一个节点的地址值，所以hashmap又叫链表的数组。hashmap的性能受两个因素的影响，初始容量和加载因子，若hash表中的条目数超过初始值和加载因子的乘积，那么hash表将做出自我调整，将容量扩充为原来的两倍，并将原有的数据重新映射到表中，这个操作叫做rehash，容量扩充，重新映射，所以说rehash必将会造成时间和空间的开销，所以说初始容量和加载因子会影响hashmap的性能。
+		b.CountDownLatch(闭锁)是一个同步辅助类,在完成一组正在其他线程中执行的操作之前,它允许一个或多个线程一直等待;
+		
+		public class TestCountDownLatch {
+
+		  // 主线程等待子线程执行完，然后执行计时操作
+
+		  public static void main(String[] args) {
+			final CountDownLatch latch = new CountDownLatch(10);//10就是实际上就是闭锁需要等待的线程数量
+			LatchDemo ld = new LatchDemo(latch);
+
+			long start = System.currentTimeMillis();
+
+			// 创建10个线程
+			for (int i = 0; i < 10; i++) {
+			  new Thread(ld).start();
+			}
+
+			try {
+			  latch.await();//与CountDownLatch的第一次交互是主线程等待其他线程。主线程必须在启动其他线程后立即调用CountDownLatch.await()方法。这样主线程的操作就会在这个方法上阻塞，直到其他线程完成各自的任务。 这样就达到计时的效果
+			} catch (InterruptedException e) {
+
+			}
+
+			long end = System.currentTimeMillis();
+
+			System.out.println("耗费时间为:" + (end - start));
+		  }
+		}
+
+		class LatchDemo implements Runnable {
+		  private CountDownLatch latch;
+
+		  // 有参构造器
+		  public LatchDemo(CountDownLatch latch) {
+			this.latch = latch;
+		  }
+
+		  public void run() {
+
+			synchronized (this) {
+			  try {
+				// 打印50000以内的偶数
+				for (int i = 0; i < 50000; i++) {
+				  if (i % 2 == 0) {
+					System.out.println(i + " " + Thread.currentThread().getName());
+				  }
+				}
+			  } finally {
+				// 线程数量递减
+				latch.countDown();
+			  }
+			}
+		  }
+		}
+
+		CountDownLatch的3个使用场景：
+		实现最大的并行性：有时我们想同时启动多个线程，实现最大程度的并行性。例如，我们想测试一个单例类。如果我们创建一个初始计数为1的CountDownLatch，并让所有线程都在这个锁上等待，那么我们可以很轻松地完成测试。我们只需调用 一次countDown()方法就可以让所有的等待线程同时恢复执行。
+		开始执行前等待n个线程完成各自任务：例如应用程序启动类要确保在处理用户请求前，所有N个外部系统已经启动和运行了。
+		死锁检测：一个非常方便的使用场景是，你可以使用n个线程访问共享资源，在每次测试阶段的线程数目是不同的，并尝试产生死锁。
+		
+  五.IO(字节流、字符流、转换流、文件)
+	1.字节流
+	1).InputStream/OutPutStream - - -字节流基类
+	 你把你自己想象为是一个程序，InputStream对你来说是输入，也就是你要从某个地方读到自己这来，而OutputStream对你来说就是输出，也就是说你需要写到某个地方
+	 
+	
+	2).FileInputStream/FileOutputStream - - - - -处理文件类型
+	3).ByteArrayInputStream/ByteArrayOutputStream - - - -字节数组类型
+	4).DataInputStream/DataOutputStream - - - -装饰类
+	5).BufferedInputStream/BufferedOutputStream - - - -缓冲流
+
+  
+  
+  
   六.网络编程
   七.java高级技术(加个递归)
 		   
