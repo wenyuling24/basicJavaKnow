@@ -2802,19 +2802,275 @@
   五.IO(字节流、字符流、转换流、文件)
 	1.字节流
 	1).InputStream/OutPutStream - - -字节流基类
-	 你把你自己想象为是一个程序，InputStream对你来说是输入，也就是你要从某个地方读到自己这来，而OutputStream对你来说就是输出，也就是说你需要写到某个地方
-	 
+	你把你自己想象为是一个程序，InputStream对你来说是输入，也就是你要从某个地方读到自己这来，而OutputStream对你来说就是输出，也就是说你需要写到某个地方
+	a.InputStream 此抽象类是表示字节输入流的所有类的超类。需要定义 InputStream 的子类的应用程序必须始终提供返回下一个输入字节的方法
+	int available()
+	返回此输入流方法的下一个调用方可以不受阻塞地从此输入流读取（或跳过）的字节数。
+	void close()
+	关闭此输入流并释放与该流关联的所有系统资源。
+	void mark(int readlimit)
+	在此输入流中标记当前的位置。
+	boolean markSupported()
+	测试此输入流是否支持 mark 和 reset 方法。
+	abstract int read()
+	从输入流读取下一个数据字节。
+	int read(byte[] b)
+	从输入流中读取一定数量的字节并将其存储在缓冲区数组 b 中。
+	int read(byte[] b, int off, int len)
+	将输入流中最多 len 个数据字节读入字节数组。
+	void reset()
+	将此流重新定位到对此输入流最后调用 mark 方法时的位置。
+	long skip(long n)
+	跳过和放弃此输入流中的 n 个数据字节。
+	
+	b.OutputStream 此抽象类是表示输出字节流的所有类的超类。输出流接受输出字节并将这些字节发送到某个接收器。需要定义OutputStream 子类的应用程序必须始终提供至少一种可写入一个输出字节的方法。
+	void close()
+	关闭此输出流并释放与此流有关的所有系统资源。
+	void flush()
+	刷新此输出流并强制写出所有缓冲的输出字节。
+	void write(byte[] b)
+	将 b.length 个字节从指定的字节数组写入此输出流。
+	void write(byte[] b, int off, int len)
+	将指定字节数组中从偏移量 off 开始的 len 个字节写入此输出流。
+	abstract void write(int b)
+	将指定的字节写入此输出流。
+	进行I/O操作时可能会产生I/O例外，属于非运行时例外，应该在程序中处理。如：FileNotFoundException, EOFException, IOException等等，下面具体说明操作JAVA字节流的方法。
 	
 	2).FileInputStream/FileOutputStream - - - - -处理文件类型
-	3).ByteArrayInputStream/ByteArrayOutputStream - - - -字节数组类型
-	4).DataInputStream/DataOutputStream - - - -装饰类
-	5).BufferedInputStream/BufferedOutputStream - - - -缓冲流
+	本例以FileInputStream的read(buffer)方法，每次从源程序文件TestFile.txt中读取1024个字节，存储在缓冲区buffer中，再将以buffer中的值构造的字符串new String(buffer)显示在屏幕上。程序如下(请在根目录下建立TestFile.txt文件，以便正常运行)：
+	public class ReadFile {
+	  public static void main(String[] args) {
+		try {
+		  // 创建文件输入流对象
+		  FileInputStream is = new FileInputStream("TestFile.txt");
+		  // 设定读取的字节数
+		  int n = 1024;
+		  byte buffer[] = new byte[n];
+		  // 读取输入流
+		  while ((is.read(buffer, 0, n) != -1) && (n > 0)) {
+			System.out.print(new String(buffer));
+		  }
+		  System.out.println();
+		  // 关闭输入流
+		  is.close();
+		} catch (IOException ioe) {
+		  System.out.println(ioe);
+		} catch (Exception e) {
+		  System.out.println(e);
+		}
+	  }
+	}
 
+	本例用System.in.read(buffer)从键盘输入一行字符，存储在缓冲区buffer中，再以FileOutStream的write(buffer)方法，将buffer中内容写入文件WriteFile.txt中，程序如下(运行后会在根目录下建立WriteFile.txt文件)：	
+	public class WriteFile {
+	  public static void main(String[] args) {
+		try {
+		  System.out.print("输入要保存文件的内容：");
+		  int count, n = 1024;
+		  byte buffer[] = new byte[n];
+		  // 读取标准输入流
+		  count = System.in.read(buffer);
+		  // 创建文件输出流对象
+		  FileOutputStream os = new FileOutputStream("WriteFile.txt");
+		  //ileOutputStream os = new FileOutputStream("WriteFile.txt",true);//如果第二个参数为 true，则将字节写入文件末尾处，而不是写入文件开始处。如果有间隔 则和长度有关系
+		  // 写入输出流
+		  os.write(buffer, 0, count);
+		  // 关闭输出流
+		  os.close();
+		  System.out.println("已保存到WriteFile.txt!");
+		} catch (IOException ioe) {
+		  System.out.println(ioe);
+		} catch (Exception e) {
+		  System.out.println(e);
+		}
+	  }
+	}
+	3).ByteArrayInputStream/ByteArrayOutputStream - - - -字节数组类型
+	ByteArrayOutputStream把内存中的数据读到字节数组中,而ByteArrayInputStream又把字节数组中的字节以流的形式读出,实现了对同一个字节数组的操作. 
+	ByteArrayInputStream相对于ByteArrayOutputStream的（可以将程序中的数据读到自己内置的大小任意的缓冲区中，再写到一个Byte数组中）功能，显得比较鸡肋，在JDK介绍文档中介绍的都比较少（将字节数组中的数据，读到流中的缓冲区中，再反馈给程序）该缓冲区中包含从流中读取的字节。内部计数器跟踪read方法要提供的下一个字节。关闭ByteArrayInputStream无效（ByteArrayOutputStream相同）此类中的方法，在关闭此流之后，仍可以被调用，而不会产生IOException。
+	Demo
+	public class ByteArrayInputStreamDemo {
+		public static void main(String[] args)throws Exception{
+		   Data data = new Data();
+		  
+		   byte[] temp = data.getData();
+		   InputStream inputStream = new ByteArrayInputStream(temp);
+		  
+		   byte[] arr =new byte[temp.length];
+		   inputStream.read(arr);
+		   System.out.println(new String(arr));
+		  
+		}
+	}
+	 
+	class Data{
+		byte[] data = "abc".getBytes();
+		public byte[] getData() {
+		   returndata;
+		}
+	}
+	
+	ByteArrayOutputStream是用来缓存数据的（数据写入的目标（output stream原义）），向它的内部缓冲区写入数据，缓冲区自动增长，当写入完成时可以从中提取数据。由于这个原因，ByteArrayOutputStream常用于存储数据以用于一次写入。
+	关闭 ByteArrayOutputStream 无效。此类中的方法在关闭此流后仍可被调用，而不会产生任何IOException
+	Demo:从文件中读取二进制数据，全部存储到ByteArrayOutputStream中。
+	public static void main(String[] args) throws Exception {
+		FileInputStream fis = new FileInputStream("TestFile.txt");
+
+		BufferedInputStream bis = new BufferedInputStream(fis);
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+		int c = bis.read();//读取bis流中的下一个字节
+
+		while (c != -1) {
+
+		  baos.write(c);
+
+		  c = bis.read();
+		}
+
+		bis.close();
+
+		byte retArr[] = baos.toByteArray();
+
+		System.out.println(new String(retArr));
+	}
+	4).BufferedInputStream/BufferedOutputStream - - - -缓冲流
+	BufferedInputStream是带缓冲区的输入流，默认缓冲区大小是8M，能够减少访问磁盘的次数，提高文件读取性能；
+	BufferedOutputStream是带缓冲区的输出流，能够提高文件的写入效率。
+	BufferedInputStream与BufferedOutputStream分别是FilterInputStream类和FilterOutputStream类的子类，实现了装饰设计模式。
+	BufferedInputStream:
+	Demo
+	public class ReadFile {
+	  public static void main(String[] args) {
+		try {
+		  // 创建文件输入流对象
+		  FileInputStream is = new FileInputStream("TestFile.txt");
+		  BufferedInputStream bis = new BufferedInputStream(is);
+		  // 设定读取的字节数
+		  int n = 1024;
+		  byte buffer[] = new byte[n];
+		  // 读取输入流
+		  while ((bis.read(buffer, 0, n) != -1) && (n > 0)) {//int read(byte[] b, int off, int len 将输入流中最多 len 个数据字节读入字节数组。
+			System.out.print(new String(buffer));
+		  }
+		  System.out.println();
+		  // 关闭输入流
+		  bis.close();
+		} catch (IOException ioe) {
+		  System.out.println(ioe);
+		} catch (Exception e) {
+		  System.out.println(e);
+		}
+	  }
+	}
+
+	BufferedOutputStream:
+	Demo
+	public class WriteFile {
+	  public static void main(String[] args) {
+		try {
+		  System.out.print("输入要保存文件的内容：");
+		  int count, n = 512;
+		  byte buffer[] = new byte[n];
+		  // 读取标准输入流
+		  count = System.in.read(buffer);
+		  // 创建文件输出流对象
+		  FileOutputStream os = new FileOutputStream("WriteFile.txt",true);//如果第二个参数为 true，则将字节写入文件末尾处，而不是写入文件开始处。
+		  // 写入输出流
+		  BufferedOutputStream outputStream = new BufferedOutputStream(os);
+
+		  outputStream.write(buffer, 0, count);//将指定字节数组中从偏移量 off 开始的 len 个字节写入此输出流。
+		  outputStream.flush();//刷新缓冲区，一定要写，否则写入不到文件中去
+		  // 关闭输出流
+		  outputStream.close();
+
+		  System.out.println("已保存到WriteFile.txt!");
+		} catch (IOException ioe) {
+		  System.out.println(ioe);
+		} catch (Exception e) {
+		  System.out.println(e);
+		}
+	  }
+	}
+	5).DataInputStream/DataOutputStream - - - -装饰类
+	DataOutputStream数据输出流允许应用程序将基本Java数据类型写到基础输出流中;
+	DataInputStream数据输入流允许应用程序以机器无关的方式从底层输入流中读取基本的Java类型.
+	DataOutputStream dos = new DataOutputStream(new FileOutputStream("文件名"));
+	几种写入数据方法的区别：
+	dos.writeBytes(String)：writeBytes(String) 依次写入字符串中的每一个字符，并且只写入字符的低8位，高字节被抛弃。比如，writeBytes(“ABC”)， "ABC"中每个字符对应的java字符编码（java中每个字符都是2字节16位的）：
+	'A'字符编码:00000000_01000001
+	'B'字符编码:00000000_01000010
+	'C'字符编码:00000000_01000011
+	writeBytes(“ABC”)，实际写入了三个字节： 01000001_01000010_01000011
+	
+	dos.writeChars(String)：writeChars(String) 依次写入字符串中的每一个字符，字符的2个字节全部写入。dos.writeChars("中国人")会写入6个字节。 dos.writeChars("ABC")同样写入6个字节。
+	
+	dos.write(String.getBytes())：同样对应上面的2个字符串 “ABC” 和 "中国人"，可以这样输出：
+	dos.write("ABC".getBytes());
+	dos.write("中国人".getBytes());
+	write(string.getBytes()) 和?writeBytes(string) 有着本质的区别。
+	无论是??writeBytes(string) ，还是writeChars(String) 都不存在字符编码的转码的问题， 而write(string.getBytes()) 则涉及到字符编码转换问题。
+	
+	dos.writeUTF(String):writeUTF()写出一个UTF-8编码的字符串前面会加上2个字节的长度标识，已标识接下来的多少个字节是属于本次方法所写入的字节数
+	读取的时候是dos.readUTF();
+	
+	Demo
+	public class TestDataOutStream {
+	  public static void main(String[] args) {
+		// 使用DataInputStream,DataOutputStream写入文件且从文件里读取数据。
+		try {
+		  // Data Stream写到输入流中
+		  DataOutputStream dos = new DataOutputStream(new FileOutputStream(
+			  "datasteam.txt"));
+		  dos.write("世界".getBytes()); // 按UTF8编码(我的系统默认编码方式)写入
+		  //dos.write("世界".getBytes("GBK"));  //指定其它编码方式
+		  dos.writeChars("世界"); // 依照Unicode写入
+		  // 依照UTF-8写入(UTF8编码长度可变。开头2字节是由writeUTF函数写入的长度信息，方便readUTF函数读取)
+		  dos.writeUTF("世界");
+		  dos.flush();
+		  dos.close();
+
+		  // Data Stream 读取
+		  DataInputStream dis = new DataInputStream(new FileInputStream(
+			  "datasteam.txt"));
+		  // 读取字节
+		  byte[] b = new byte[6];//
+		  dis.read(b);
+		  System.out.println(new String(b, 0, 6));
+
+		  // 读取字符
+		  char[] c = new char[2];
+		  for (int i = 0; i < 2; i++) {
+			c[i] = dis.readChar();
+		  }
+		  System.out.println(new String(c, 0, 2));
+
+		  // 读取UTF
+		  System.out.println(dis.readUTF());
+
+		  dis.close();
+		} catch (IOException e) {
+		  e.printStackTrace();
+		}
+	  }
+	}
   
-  
-  
-  六.网络编程
-  七.java高级技术(加个递归)
+  六.网络编程(Socket原理机制，UDP传输，TCP传输，Http协议)
+	1.Socket原理机制
+	我们的主角Socket，它是应用层之下，传输层之上的一个接口层，也就是操作系统提供给用户访问网络的系统接口，我们可以借助于Socket接口层，对传输层，网际层以及网络接口层进行操作，来实现我们不同的应用层协议，举几个例子，如HTTP是基于TCP实现的，ping和tracerouter是基于ICMP实现的，libpcap(用wireshare做过网络抓包的可能更熟悉)则是直接读取了网络接口层的数据，但是他们的实现，都是借助于Socket完成的。可见，对于应用层，我们想实现网络功能，归根究底都是要通过Socket来实现的，否则，我们无法访问处于操作系统的传输层，网际层以及网络接口层。考虑的本文以及本文之后的其他文章，我们暂时只关注Socket访问传输层的流程，其他的方面可以参看相关书籍，这里推荐《TCP/IP详解 卷一》以及《UNIX网络编程》(UNP)，虽然是Linux C语言开发的书，但是对网络编程讲解的很透彻。这里也向这位大家致敬，虽英年早逝，留给大家的财富不可估量。
+	TCP/UDP区别和联系:
+	1).TCP是可靠的，也就是说，我们通过TCP发送的数据，网络协议栈会保证数据可靠的传输到对端;
+	UDP是不可靠的，如果出现丢包，协议栈不会做任何处理，可靠性的保证交由应用层处理。因此，TCP的性能会比UDP低，但是可靠性会比UDP好很多。
+	2).两者在传输数据时，也有形式上的不同，TCP的数据是流，大家可以类比文件流，而UDP则是基于数据包，也就是说数据会被打成包发送
+	
+	在UDP中，每次发送数据报，需要附上本机的socket描述符和接收端的socket描述符.而TCP是基于连接的协议，在通信的socket之间需要在通信之前建立连接，即TCP的三次握手，，因此建立连接会有一定耗时 
+	在UDP中，数据报数据在大小有64KB的限制。而TCP不存在这样的限制，一旦TCP通信的socket对建立连接，他们通信类似IO流。 
+	UDP是不可靠的协议，发送的数据报不一定会按照其发送顺序被接收端的socket接收。而TCP是一种可靠的协议。接收端收到的包的顺序和包在发送端的顺序大体一致(这里不讨论丢包的情况)
+	说到这，至于选择哪种协议，还是取决于你的使用场景，当然目前见得比较多就是基于TCP协议的Socket通信。当然一些实时性较高的一些服务，局域网的一些服务用UDP的多一些。
+	基于TCP协议的Java Socket编程实例:
+	socket编程总的来说分为3步:建立连接，数据传送，连接释放.
+  七.java高级技术(反射，泛型，注解)
 		   
 		   
 		   
