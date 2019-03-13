@@ -2994,84 +2994,1122 @@
 	  }
 	}
 	5).DataInputStream/DataOutputStream - - - -装饰类
-	DataOutputStream数据输出流允许应用程序将基本Java数据类型写到基础输出流中;
-	DataInputStream数据输入流允许应用程序以机器无关的方式从底层输入流中读取基本的Java类型.
-	DataOutputStream dos = new DataOutputStream(new FileOutputStream("文件名"));
-	几种写入数据方法的区别：
-	dos.writeBytes(String)：writeBytes(String) 依次写入字符串中的每一个字符，并且只写入字符的低8位，高字节被抛弃。比如，writeBytes(“ABC”)， "ABC"中每个字符对应的java字符编码（java中每个字符都是2字节16位的）：
-	'A'字符编码:00000000_01000001
-	'B'字符编码:00000000_01000010
-	'C'字符编码:00000000_01000011
-	writeBytes(“ABC”)，实际写入了三个字节： 01000001_01000010_01000011
-	
-	dos.writeChars(String)：writeChars(String) 依次写入字符串中的每一个字符，字符的2个字节全部写入。dos.writeChars("中国人")会写入6个字节。 dos.writeChars("ABC")同样写入6个字节。
-	
-	dos.write(String.getBytes())：同样对应上面的2个字符串 “ABC” 和 "中国人"，可以这样输出：
-	dos.write("ABC".getBytes());
-	dos.write("中国人".getBytes());
-	write(string.getBytes()) 和?writeBytes(string) 有着本质的区别。
-	无论是??writeBytes(string) ，还是writeChars(String) 都不存在字符编码的转码的问题， 而write(string.getBytes()) 则涉及到字符编码转换问题。
-	
-	dos.writeUTF(String):writeUTF()写出一个UTF-8编码的字符串前面会加上2个字节的长度标识，已标识接下来的多少个字节是属于本次方法所写入的字节数
-	读取的时候是dos.readUTF();
-	
-	Demo
-	public class TestDataOutStream {
-	  public static void main(String[] args) {
-		// 使用DataInputStream,DataOutputStream写入文件且从文件里读取数据。
-		try {
-		  // Data Stream写到输入流中
-		  DataOutputStream dos = new DataOutputStream(new FileOutputStream(
-			  "datasteam.txt"));
-		  dos.write("世界".getBytes()); // 按UTF8编码(我的系统默认编码方式)写入
-		  //dos.write("世界".getBytes("GBK"));  //指定其它编码方式
-		  dos.writeChars("世界"); // 依照Unicode写入
-		  // 依照UTF-8写入(UTF8编码长度可变。开头2字节是由writeUTF函数写入的长度信息，方便readUTF函数读取)
-		  dos.writeUTF("世界");
-		  dos.flush();
-		  dos.close();
+		DataOutputStream数据输出流允许应用程序将基本Java数据类型写到基础输出流中;
+		DataInputStream数据输入流允许应用程序以机器无关的方式从底层输入流中读取基本的Java类型.
+		DataOutputStream dos = new DataOutputStream(new FileOutputStream("文件名"));
+		几种写入数据方法的区别：
+		dos.writeBytes(String)：writeBytes(String) 依次写入字符串中的每一个字符，并且只写入字符的低8位，高字节被抛弃。比如，writeBytes(“ABC”)， "ABC"中每个字符对应的java字符编码（java中每个字符都是2字节16位的）：
+		'A'字符编码:00000000_01000001
+		'B'字符编码:00000000_01000010
+		'C'字符编码:00000000_01000011
+		writeBytes(“ABC”)，实际写入了三个字节： 01000001_01000010_01000011
+		
+		dos.writeChars(String)：writeChars(String) 依次写入字符串中的每一个字符，字符的2个字节全部写入。dos.writeChars("中国人")会写入6个字节。 dos.writeChars("ABC")同样写入6个字节。
+		
+		dos.write(String.getBytes())：同样对应上面的2个字符串 “ABC” 和 "中国人"，可以这样输出：
+		dos.write("ABC".getBytes());
+		dos.write("中国人".getBytes());
+		write(string.getBytes()) 和?writeBytes(string) 有着本质的区别。
+		无论是??writeBytes(string) ，还是writeChars(String) 都不存在字符编码的转码的问题， 而write(string.getBytes()) 则涉及到字符编码转换问题。
+		
+		dos.writeUTF(String):writeUTF()写出一个UTF-8编码的字符串前面会加上2个字节的长度标识，已标识接下来的多少个字节是属于本次方法所写入的字节数
+		读取的时候是dos.readUTF();
+		
+		Demo
+		public class TestDataOutStream {
+		  public static void main(String[] args) {
+			// 使用DataInputStream,DataOutputStream写入文件且从文件里读取数据。
+			try {
+			  // Data Stream写到输入流中
+			  DataOutputStream dos = new DataOutputStream(new FileOutputStream(
+				  "datasteam.txt"));
+			  dos.write("世界".getBytes()); // 按UTF8编码(我的系统默认编码方式)写入
+			  //dos.write("世界".getBytes("GBK"));  //指定其它编码方式
+			  dos.writeChars("世界"); // 依照Unicode写入
+			  // 依照UTF-8写入(UTF8编码长度可变。开头2字节是由writeUTF函数写入的长度信息，方便readUTF函数读取)
+			  dos.writeUTF("世界");
+			  dos.flush();
+			  dos.close();
 
-		  // Data Stream 读取
-		  DataInputStream dis = new DataInputStream(new FileInputStream(
-			  "datasteam.txt"));
-		  // 读取字节
-		  byte[] b = new byte[6];//
-		  dis.read(b);
-		  System.out.println(new String(b, 0, 6));
+			  // Data Stream 读取
+			  DataInputStream dis = new DataInputStream(new FileInputStream(
+				  "datasteam.txt"));
+			  // 读取字节
+			  byte[] b = new byte[6];//
+			  dis.read(b);
+			  System.out.println(new String(b, 0, 6));
 
-		  // 读取字符
-		  char[] c = new char[2];
-		  for (int i = 0; i < 2; i++) {
-			c[i] = dis.readChar();
+			  // 读取字符
+			  char[] c = new char[2];
+			  for (int i = 0; i < 2; i++) {
+				c[i] = dis.readChar();
+			  }
+			  System.out.println(new String(c, 0, 2));
+
+			  // 读取UTF
+			  System.out.println(dis.readUTF());
+
+			  dis.close();
+			} catch (IOException e) {
+			  e.printStackTrace();
+			}
 		  }
-		  System.out.println(new String(c, 0, 2));
-
-		  // 读取UTF
-		  System.out.println(dis.readUTF());
-
-		  dis.close();
-		} catch (IOException e) {
-		  e.printStackTrace();
 		}
-	  }
-	}
   
-  六.网络编程(Socket原理机制，UDP传输，TCP传输，Http协议)
+六.网络编程(Socket原理机制，UDP传输，TCP传输，Http协议)
 	1.Socket原理机制
-	我们的主角Socket，它是应用层之下，传输层之上的一个接口层，也就是操作系统提供给用户访问网络的系统接口，我们可以借助于Socket接口层，对传输层，网际层以及网络接口层进行操作，来实现我们不同的应用层协议，举几个例子，如HTTP是基于TCP实现的，ping和tracerouter是基于ICMP实现的，libpcap(用wireshare做过网络抓包的可能更熟悉)则是直接读取了网络接口层的数据，但是他们的实现，都是借助于Socket完成的。可见，对于应用层，我们想实现网络功能，归根究底都是要通过Socket来实现的，否则，我们无法访问处于操作系统的传输层，网际层以及网络接口层。考虑的本文以及本文之后的其他文章，我们暂时只关注Socket访问传输层的流程，其他的方面可以参看相关书籍，这里推荐《TCP/IP详解 卷一》以及《UNIX网络编程》(UNP)，虽然是Linux C语言开发的书，但是对网络编程讲解的很透彻。这里也向这位大家致敬，虽英年早逝，留给大家的财富不可估量。
-	TCP/UDP区别和联系:
+	我们的主角Socket，它是应用层之下，传输层之上的一个接口层，也就是操作系统提供给用户访问网络的系统接口，
+	我们可以借助于Socket接口层，对传输层，网际层以及网络接口层进行操作，来实现我们不同的应用层协议，
+	举几个例子，如HTTP是基于TCP实现的，ping和tracerouter是基于ICMP实现的，libpcap(用wireshare做过网络抓包的可能更熟悉)则是直接读取了网络接口层的数据，但是他们的实现，都是借助于Socket完成的。可见，对于应用层，我们想实现网络功能，归根究底都是要通过Socket来实现的，否则，我们无法访问处于操作系统的传输层，网际层以及网络接口层。
+	TCP/UDP区别:
 	1).TCP是可靠的，也就是说，我们通过TCP发送的数据，网络协议栈会保证数据可靠的传输到对端;
-	UDP是不可靠的，如果出现丢包，协议栈不会做任何处理，可靠性的保证交由应用层处理。因此，TCP的性能会比UDP低，但是可靠性会比UDP好很多。
+	   UDP是不可靠的，如果出现丢包，协议栈不会做任何处理，可靠性的保证交由应用层处理。因此，TCP的性能会比UDP低，但是可靠性会比UDP好很多。
 	2).两者在传输数据时，也有形式上的不同，TCP的数据是流，大家可以类比文件流，而UDP则是基于数据包，也就是说数据会被打成包发送
+		在UDP中，每次发送数据报，需要附上本机的socket描述符和接收端的socket描述符.而TCP是基于连接的协议，在通信的socket之间需要在通信之前建立连接，即TCP的三次握手，，因此建立连接会有一定耗时 
+		在UDP中，数据报数据在大小有64KB的限制。而TCP不存在这样的限制，一旦TCP通信的socket对建立连接，他们通信类似IO流。 
+		UDP是不可靠的协议，发送的数据报不一定会按照其发送顺序被接收端的socket接收。而TCP是一种可靠的协议。接收端收到的包的顺序和包在发送端的顺序大体一致(这里不讨论丢包的情况)
+	3).说到这，至于选择哪种协议，还是取决于你的使用场景，当然目前见得比较多就是基于TCP协议的Socket通信。当然一些实时性较高的一些服务，局域网的一些服务用UDP的多一些。
+		基于TCP协议的Java Socket编程实例:
+		Socket通信步骤：（简单分为4步）
+		a.建立服务端ServerSocket和客户端Socket
+		b.打开连接到Socket的输出输入流
+		c.按照协议进行读写操作
+		d.关闭相对应的资源
+	4).相关联的API
+		a.类ServerSocket 
+		此类实现服务器套接字。服务器套接字等待请求通过网络传入。它基于该请求执行某些操作，然后可能向请求者返回结果。
+		服务器套接字的实际工作由 SocketImpl 类的实例执行。应用程序可以更改创建套接字实现的套接字工厂来配置它自身，从而创建适合本地防火墙的套接字。 
+		一些重要的方法：（具体大家查看官方api吧）
+		ServerSocket(int port, int backlog) 
+		利用指定的 backlog 创建服务器套接字并将其绑定到指定的本地端口号。
+		bind(SocketAddress endpoint, int backlog) 
+		将 ServerSocket 绑定到特定地址（IP 地址和端口号）。
+		accept() 
+		侦听并接受到此套接字的连接
+		getInetAddress() 
+		返回此服务器套接字的本地地址。
+		 close() 
+		关闭此套接字。
+		b.类Socket
+		此类实现客户端套接字（也可以就叫“套接字”）。套接字是两台机器间通信的端点。
+		套接字的实际工作由 SocketImpl 类的实例执行。应用程序通过更改创建套接字实现的套接字工厂可以配置它自身，以创建适合本地防火墙的套接字。
+		一些重要的方法：（具体大家查看官方api吧）
+		Socket(InetAddress address, int port) 
+		创建一个流套接字并将其连接到指定 IP 地址的指定端口号。
+		getInetAddress() 
+		返回套接字连接的地址。
+		shutdownInput() 
+		此套接字的输入流置于“流的末尾”。
+		shutdownOutput() 
+		禁用此套接字的输出流。
+		close() 
+		关闭此套接字
+		c.代码实现：
+		服务端Server_Socket.java
+		(1).创建ServerSocket对象，绑定并监听端口
+		(2).通过accept监听客户端的请求
+		(3).建立连接后，通过输出输入流进行读写操作
+		(4).关闭相关资源
+		public class Server_Socket {
+		  /**
+		   * Socket服务端
+		   */
+		  public static void main(String[] args) {
+
+			try {
+
+			  ServerSocket serverSocket = new ServerSocket(8888);
+
+			  System.out.println("服务端已启动，等待客户端连接..");
+			  Socket socket = serverSocket.accept();//侦听并接受到此套接字的连接,返回一个Socket对象
+
+			  //根据输入输出流和客户端连接
+			  InputStream inputStream = socket.getInputStream();//得到一个输入流，接收客户端传递的信息
+			  InputStreamReader inputStreamReader = new InputStreamReader(inputStream);//提高效率，将自己字节流转为字符流
+			  BufferedReader bufferedReader = new BufferedReader(inputStreamReader);//加入缓冲区
+			  String temp = null;
+			  String info = "";
+			  while ((temp = bufferedReader.readLine()) != null) {
+				info += temp;
+				System.out.println("已接收到客户端连接");
+				System.out.println(
+					"服务端接收到客户端信息：" + info + ",当前客户端ip为：" + socket.getInetAddress().getHostAddress());
+			  }
+
+			  OutputStream outputStream = socket.getOutputStream();//获取一个输出流，向服务端发送信息
+			  PrintWriter printWriter = new PrintWriter(outputStream);//将输出流包装成打印流
+			  printWriter.print("你好，服务端已接收到您的信息");
+			  printWriter.flush();
+			  socket.shutdownOutput();//关闭输出流
+
+			  //关闭相对应的资源
+			  printWriter.close();
+			  outputStream.close();
+			  bufferedReader.close();
+			  inputStream.close();
+			  socket.close();
+			} catch (IOException e) {
+			  e.printStackTrace();
+			}
+		  }
+		}
+		客户端Client_Socket.java
+		(1).创建Socket对象，指定服务端的地址和端口号
+		(2).建立连接后，通过输出输入流进行读写操作
+		(3).通过输出输入流获取服务器返回信息
+		(4).关闭相关资源
+		public class Client_Socket {
+		  /**
+		   * Socket客户端
+		   */
+		  public static void main(String[] args) {
+			try {
+			  //创建Socket对象
+			  Socket socket = new Socket("localhost", 8888);
+
+			  //根据输入输出流和服务端连接
+			  OutputStream outputStream = socket.getOutputStream();//获取一个输出流，向服务端发送信息
+			  PrintWriter printWriter = new PrintWriter(outputStream);//将输出流包装成打印流
+			  printWriter.print("服务端你好，我是Balla_兔子");
+			  printWriter.flush();
+			  socket.shutdownOutput();//关闭输出流
+
+			  InputStream inputStream = socket.getInputStream();//获取一个输入流，接收服务端的信息
+			  InputStreamReader inputStreamReader = new InputStreamReader(inputStream);//包装成字符流，提高效率
+			  BufferedReader bufferedReader = new BufferedReader(inputStreamReader);//缓冲区
+			  String info = "";
+			  String temp = null;//临时变量
+			  while ((temp = bufferedReader.readLine()) != null) {
+				info += temp;
+				System.out.println("客户端接收服务端发送信息：" + info);
+			  }
+
+			  //关闭相对应的资源
+			  bufferedReader.close();
+			  inputStream.close();
+			  printWriter.close();
+			  outputStream.close();
+			  socket.close();
+			} catch (IOException e) {
+			  e.printStackTrace();
+			}
+		  }
+		}
 	
-	在UDP中，每次发送数据报，需要附上本机的socket描述符和接收端的socket描述符.而TCP是基于连接的协议，在通信的socket之间需要在通信之前建立连接，即TCP的三次握手，，因此建立连接会有一定耗时 
-	在UDP中，数据报数据在大小有64KB的限制。而TCP不存在这样的限制，一旦TCP通信的socket对建立连接，他们通信类似IO流。 
-	UDP是不可靠的协议，发送的数据报不一定会按照其发送顺序被接收端的socket接收。而TCP是一种可靠的协议。接收端收到的包的顺序和包在发送端的顺序大体一致(这里不讨论丢包的情况)
-	说到这，至于选择哪种协议，还是取决于你的使用场景，当然目前见得比较多就是基于TCP协议的Socket通信。当然一些实时性较高的一些服务，局域网的一些服务用UDP的多一些。
-	基于TCP协议的Java Socket编程实例:
-	socket编程总的来说分为3步:建立连接，数据传送，连接释放.
-  七.java高级技术(反射，泛型，注解)
-		   
+		以上代码实现了单客户端和服务端的连接，若要实现多客户端操作，需要涉及到多线程，只要你把每个接收到的Socket对象单独开一条线程操作，然后用一个死循环while(true)去监听端口就行，这边直接给代码了
+		线程操作类：SocketThread.java
+		public class SocketThread extends Thread {
+		  private Socket socket;
+
+		  public SocketThread(Socket socket) {
+			this.socket = socket;
+		  }
+
+		  public void run() {
+			// 根据输入输出流和客户端连接
+			try {
+
+			  InputStream inputStream = socket.getInputStream();
+
+			// 得到一个输入流，接收客户端传递的信息
+			  InputStreamReader inputStreamReader = new InputStreamReader(
+				  inputStream);// 提高效率，将自己字节流转为字符流
+			  BufferedReader bufferedReader = new BufferedReader(
+				  inputStreamReader);// 加入缓冲区
+			  String temp = null;
+			  String info = "";
+			  while ((temp = bufferedReader.readLine()) != null) {
+				info += temp;
+				System.out.println("已接收到客户端连接");
+				System.out.println("服务端接收到客户端信息：" + info + ",当前客户端ip为："
+					+ socket.getInetAddress().getHostAddress());
+			  }
+
+			  OutputStream outputStream = socket.getOutputStream();// 获取一个输出流，向服务端发送信息
+			  PrintWriter printWriter = new PrintWriter(outputStream);// 将输出流包装成打印流
+			  printWriter.print("你好，服务端已接收到您的信息");
+			  printWriter.flush();
+			  socket.shutdownOutput();// 关闭输出流
+
+			  // 关闭相对应的资源
+			  bufferedReader.close();
+			  inputStream.close();
+			  printWriter.close();
+			  outputStream.close();
+
+			} catch (IOException e) {
+			  e.printStackTrace();
+			}
+		  }
+		}
+		
+		
+		服务端变成
+		public class Server_Socket {
+		  /**
+		   * Socket服务端
+		   */
+		  public static void main(String[] args) {
+
+			try {
+			  ServerSocket serverSocket = new ServerSocket(8881);
+			  System.out.println("服务端已启动，等待客户端连接..");
+
+			  while (true) {
+				Socket socket = serverSocket.accept();// 侦听并接受到此套接字的连接,返回一个Socket对象
+				SocketThread socketThread = new SocketThread(socket);
+				socketThread.start();
+			  }
+
+			} catch (IOException e) {
+			  e.printStackTrace();
+			}
+		  }
+		}
+		
+		Socket一个服务端和客户端可以互相对话的Demo
+		服务端：
+		public class Server_Test  extends Thread{
+		  ServerSocket server = null;
+		  Socket socket = null;
+		  public Server_Test(int port) {
+			try {
+			  server = new ServerSocket(port);
+			} catch (IOException e) {
+			  e.printStackTrace();
+			}
+		  }
+		  @Override
+		  public void run(){
+
+			super.run();
+			try{
+			  System.out.println("wait client connect...");
+			  while(true){
+				socket = server.accept();
+				new sendMessThread().start();//连接并返回socket后，再启用发送消息线程
+				System.out.println(socket.getInetAddress().getHostAddress()+"SUCCESS TO CONNECT...");
+				InputStream in = socket.getInputStream();
+				int len = 0;
+				byte[] buf = new byte[1024];
+				while ((len=in.read(buf))!=-1){
+				  System.out.println("client saying: "+new String(buf,0,len));
+				}
+			  }
+
+			}catch (IOException e){
+			  e.printStackTrace();
+			}
+		  }
+
+
+		  class sendMessThread extends Thread{
+			@Override
+			public void run(){
+			  super.run();
+			  Scanner scanner=null;
+			  OutputStream out = null;
+			  try{
+				if(socket != null){
+				  scanner = new Scanner(System.in);
+				  out = socket.getOutputStream();
+				  String in = "";
+				  do {
+					in = scanner.next();
+					out.write(("server saying: "+in).getBytes());
+					out.flush();//清空缓存区的内容
+				  }while (!in.equals("q"));
+				  scanner.close();
+				  try{
+					out.close();
+				  }catch (IOException e){
+					e.printStackTrace();
+				  }
+				}
+			  }catch (IOException e) {
+				e.printStackTrace();
+			  }
+
+			}
+
+		  }
+
+		  //函数入口
+		  public static void main(String[] args) {
+			Server_Test server = new Server_Test(1235);
+			server.start();
+		  }
+		}
+		
+		客户端：
+		public class Client extends Thread {
+		  //定义一个Socket对象
+		  Socket socket = null;
+
+		  public Client(String host, int port) {
+			try {
+			  //需要服务器的IP地址和端口号，才能获得正确的Socket对象
+			  socket = new Socket(host, port);
+			} catch (UnknownHostException e) {
+			  e.printStackTrace();
+			} catch (IOException e) {
+			  e.printStackTrace();
+			}
+
+		  }
+
+		  @Override
+		  public void run() {
+			//客户端一连接就可以写数据个服务器了
+			new sendMessThread().start();
+			super.run();
+			try {
+			  // 读Sock里面的数据
+			  InputStream s = socket.getInputStream();
+			  byte[] buf = new byte[1024];
+			  int len = 0;
+			  while ((len = s.read(buf)) != -1) {
+				System.out.println(new String(buf, 0, len));
+			  }
+
+			} catch (IOException e) {
+			  e.printStackTrace();
+			}
+		  }
+
+		  //往Socket里面写数据，需要新开一个线程
+		  class sendMessThread extends Thread{
+			@Override
+			public void run() {
+			  super.run();
+			  //写操作
+			  Scanner scanner=null;
+			  OutputStream os= null;
+			  try {
+				scanner=new Scanner(System.in);
+				os= socket.getOutputStream();
+				String in="";
+				do {
+				  in=scanner.next();
+				  os.write((""+in).getBytes());
+				  os.flush();
+				} while (!in.equals("bye"));
+			  } catch (IOException e) {
+				e.printStackTrace();
+			  }
+			  scanner.close();
+			  try {
+				os.close();
+			  } catch (IOException e) {
+				e.printStackTrace();
+			  }
+			}
+		  }
+		  //函数入口
+		  public static void main(String[] args) {
+			//需要服务器的正确的IP地址和端口号
+			Client clientTest=new Client("127.0.0.1", 1235);
+			clientTest.start();
+		  }
+		}
+	2.UDP传输
+	  1).UDP协议
+		在有些应用程序中，保持最快的速度比保证每一位数据都正确到达更重要。
+		例如，在实时音频或视频中，丢失数据包只会作为干扰出现。干扰是可以容忍的，但当TCP请求重传或等待数据包到达而它却迟迟不到时，音频流中就会出现尴尬的停顿，这让人无法接受的。在其他应用中，可以在应用层实现可靠性传输。
+		例如：如果客户端向服务器发送一个短的UDP请求，倘若制定时间内没有响应返回，它会认为这个包已丢失。域名系统就是采用这样的工作方式。
+		事实上，可以用UDP实现一个可靠的文件传输协议，而且很多人确实是这样做的：网络文件系统，简单FTP都使用了UDP协议。在这些协议中由应用程序来负责可靠性。
+		java中的UDP实现分为两个类：DatagramPacket和 DatagramSocket。DatagramPacket类将数据字节填充到UDP包中，这称为数据报。 
+		DatagramSocket来发送这个包。要接受数据，可以从DatagramSocket中接受一个 DatagramPack对象，然后从该包中读取数据的内容。
+		UDP是面向无连接的单工通信，它速度快。
+		a.DatagramSocket类
+		构造函数：
+		DatagramSocket()  
+		创建实例，通常用于客户端编程，他并没有特定的监听端口，仅仅使用一个临时的。
+		DatagramSocket(int port) 
+		创建实例，并固定监听Port端口的报文。
+		DatagramSocket(int port, InetAddress laddr) 
+		这是个非常有用的构建器，当一台机器拥有多于一个IP地址的时候，由它创建的实例仅仅接收来自LocalAddr的报文。
+		DatagramSocket(SocketAddress bindaddr)	
+		bindaddr对象中指定了端口和地址。
+		常用函数：
+		receive(DatagramPacket p)	
+		接收数据报文到p中。receive方法是阻塞的，如果没有接收到数据报包的话就会阻塞在哪里。
+		send(DatagramPacket p)	
+		发送报文p到目的地。
+		setSoTimeout(int timeout)	
+		设置超时时间，单位为毫秒。
+		close()	
+		关闭DatagramSocket。在应用程序退出的时候，通常会主动的释放资源，关闭Socket，但是由于异常的退出可能造成资源无法回收。所以应该在程序完成的时候，主动使用此方法关闭Socket，或在捕获到异常后关闭Socket。
+		
+		b.DatagramPacket类
+		DatagramPacket类用于处理报文，将字节数组、目标地址、目标端口等数据包装成报文或者将报文拆卸成字节数组。
+		构造函数：
+		DatagramPacket(byte[] buf, int length, InetAddress addr, int port)	
+		从buf字节数组中取出offset开始的、length长的数据创建数据对象，目标地址是addr，目标端口是port。
+		DatagramPacket(byte buf[], int offset, int length, SocketAddress address)	
+		从buf字节数组中取出offset开始的、length长的数据创建数据对象，目标地址是address
+		常用函数：
+		getData() byte[]	
+		从实例中取得报文中的字节数组编码。
+		setData(byte[] buf, int offset, int length)
+		设置数据报包中的数据内容
+		
+		c.UDP通信的通信流程
+		UDP发送端：
+		(1).建立updsocket服务。
+		(2).提供数据，并将数据封装到数据包中。
+		(3).通过socket服务的发送功能，将数据包发出去。
+		(4).关闭资源。
+		UDP接收端:
+		(1).定义udpsocket服务，通常会监听一个端口。
+		(2).定义一个数据包，存储接收到的字节数据。
+		(3).通过socket服务的receive方法将收到的数据存入已定义好的数据包中。
+		(4).通过数据包对象的特有功能，将这些不同的数据取出，打印在控制台上。
+		(5).关闭资源
+		发送端
+		public class Send {
+			
+		  public static void main(String[] args) throws Exception {
+			DatagramSocket ds = new DatagramSocket();//通过DatagramSocket对象创建udp服务
+			BufferedReader bufr =
+				new BufferedReader(new InputStreamReader(System.in));//从键盘上面输入文本
+			String line = null;
+			while((line=bufr.readLine())!=null)//当输入不为空时
+			{
+			  if("byebye".equals(line))//当输入为byebye时退出程序
+				break;
+			  //确定好数据后，并把数据封装成数据包
+			  byte[] buf = line.getBytes();
+			  DatagramPacket dp =
+				  new DatagramPacket(buf,buf.length, InetAddress.getByName("127.0.0.1"),30000);//发送至指定IP，指定端口
+			  ds.send(dp);//通过send方法将数据包发送出去
+			}
+			ds.close();//关闭资源
+		  }
+		}
+		接收端
+		public class Receive {
+		  public static void main(String[] args) throws Exception
+		  {
+			@SuppressWarnings("resource")
+			DatagramSocket ds = new DatagramSocket(30000);//接收端监听指定端口
+			while(true)
+			{
+			  //定义数据包,用于存储数据
+			  byte[] buf = new byte[1024];
+			  DatagramPacket dp = new DatagramPacket(buf,buf.length);
+			  ds.receive(dp);//通过服务的receive方法将收到数据存入数据包中,receive()为阻塞式方法,接收到数据报之前会一直阻塞
+			  //通过数据包的方法获取其中的数据
+			  String ip = dp.getAddress().getHostAddress();
+			  String data = new String(dp.getData(),0,dp.getLength());
+			  System.out.println(ip+"::"+data);
+			}
+		  }
+		}
+		
+	3.TCP传输
+	Socket的使用就是TCP传输的基本用法；见上1
+	4.UDP传输和TCP传输的比较
+	UDP通讯协议的特点：(DatagramPacket和 DatagramSocket)
+	a. 将数据极封装为数据包，面向无连接。
+	b. 每个数据包大小限制在64K中
+	c.因为无连接，所以不可靠
+	d. 因为不需要建立连接，所以速度快
+	e.udp 通讯是不分服务端与客户端的，只分发送端与接收端。
+
+	TCP通讯协议特点：(Socket和ServerScocket)
+	a. tcp是基于IO流进行数据 的传输 的，面向连接。
+	b. tcp进行数据传输的时候是没有大小限制的。
+	c. tcp是面向连接，通过三次握手的机制保证数据的完整性。 可靠协议。
+	d. tcp是面向连接的，所以速度慢。
+	e. tcp是区分客户端与服务端 的。
+
+	顺便附上我们在利用JAVA写两个协议的过程：
+	UDP：
+	发送端的使用步骤：
+	a. 建立udp的服务。
+	b. 准备数据，把数据封装到数据包中发送。 发送端的数据包要带上ip地址与端口号。
+	c. 调用udp的服务，发送数据。
+	d. 关闭资源。
+	接收端的使用步骤：
+	a. 建立udp的服务
+	b. 准备空 的数据 包接收数据。
+	c. 调用udp的服务接收数据。
+	d. 关闭资源
+	TCP：
+	tcp的客户端使用步骤：
+	a. 建立tcp的客户端服务。
+	b. 获取到对应的流对象。
+	c.写出或读取数据
+	d. 关闭资源。
+	ServerSocket的使用 步骤：
+	a. 建立tcp服务端 的服务。
+	b. 接受客户端的连接产生一个Socket.
+	c. 获取对应的流对象读取或者写出数据。
+	d. 关闭资源。
+	
+	5.Http协议
+	  1).介绍
+	  HTTP是Hyper Text Transfer Protocol（超文本传输协议）的缩写。它的发展是万维网协会（World Wide Web Consortium）和Internet工作小组IETF（Internet Engineering Task Force）合作的结果，（他们）最终发布了一系列的RFC，RFC 1945定义了HTTP/1.0版本。其中最著名的就是RFC 2616。RFC 2616定义了今天普遍使用的一个版本——HTTP 1.1。
+	  HTTP协议（HyperText Transfer Protocol，超文本传输协议）是用于从WWW服务器传输超文本到本地浏览器的传送协议。它可以使浏览器更加高效，使网络传输减少。它不仅保证计算机正确快速地传输超文本文档，还确定传输文档中的哪一部分，以及哪部分内容首先显示(如文本先于图形)等。
+	  HTTP协议是一个传输层基于TCP的应用层协议！
+	  2).利用java代码测试各个协议头
+	  一个完整的http协议包括请求和响应，
+	  注意：使用HTTP协议，无法实现在客户端没有发起请求的时候，服务器将消息推送给客户端.
+		a.请求篇
+		http请求由三部分组成，分别是：请求行、消息报头、请求正文
+		请求行以一个方法符号开头，以空格分开，后面跟着请求的URI和协议的版本，格式如下：Method Request-URI HTTP-Version CRLF  
+		其中 Method表示请求方法；Request-URI是一个统一资源标识符；HTTP-Version表示请求的HTTP协议版本；CRLF表示回车和换行（除了作为结尾的CRLF外，不允许出现单独的CR或LF字符）。
+		请求方法（所有方法全为大写）有多种，各个方法的解释如下：
+		GET     请求获取Request-URI所标识的资源
+		POST    在Request-URI所标识的资源后附加新的数据
+		HEAD    请求获取由Request-URI所标识的资源的响应消息报头
+		PUT     请求服务器存储一个资源，并用Request-URI作为其标识
+		DELETE  请求服务器删除Request-URI所标识的资源
+		TRACE   请求服务器回送收到的请求信息，主要用于测试或诊断
+		CONNECT 保留将来使用
+		OPTIONS 请求查询服务器的性能，或者查询与资源相关的选项和需求
+		b.响应篇
+		响应消息包括状态行、若干头部行和附属体（html数据实体）。
+		状态行
+		状态行包括：HTTP协议版本号、状态码、状态码的文本描述信息。如：HTTP/1.1 200 OK
+		状态码由一个三位数组成，状态码大体有5种含义：
+		1. 1xx。信息，请求收到，继续处理。
+		2. 2xx。成功。200请求成功；206断点续传。
+		3. 3xx。重定向。一般跳转到新的地址。
+		4. 4xx。客户端错误。404文件不存在
+		5. 5xx。服务器错误。500内部错误。
+		 
+		常见状态代码、状态描述、说明：
+		200 OK      //客户端请求成功
+		400 Bad Request  //客户端请求有语法错误，不能被服务器所理解
+		401 Unauthorized //请求未经授权，这个状态代码必须和WWW-Authenticate报头域一起使用 
+		403 Forbidden  //服务器收到请求，但是拒绝提供服务
+		404 Not Found  //请求资源不存在，eg：输入了错误的URL
+		500 Internal Server Error //服务器发生不可预期的错误
+		503 Server Unavailable  //服务器当前不能处理客户端的请求，一段时间后可能恢复正常
+		eg：HTTP/1.1 200 OK （CRLF）
+		头部行
+		Set-Cookie：服务器设置客户端Cookie。设置格式是name=value，设置多个参数时中间用分号隔开。Set-Cookie时还会用到几个参数：PATH设置有效的路径，DOMAIN设置cookie生效的域名，Expire设置cookie的有效时间，0表示关闭浏览器就失效。
+		Location：当服务器返回3xx重定向时，该参数实现重定向。广告链接的跳转就使用这种协议。
+		Content-Length：附属体（数据实体）的长度
+	  3).java中的Http通信
+		a.使用HTTP的Get方式读取网络数据
+		public class ReadByGet extends Thread {
+
+		  @Override public void run() {
+			try {
+			  //如果有参数，在网址中携带参数
+			  URL url = new URL("http://gank.io/api/today");
+			  HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+			  //伪造一下UA就可以了
+			  conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36)");
+			  InputStream is = conn.getInputStream();
+			  InputStreamReader isr = new InputStreamReader(is);
+			  BufferedReader br = new BufferedReader(isr);
+
+			  int responsecode = conn.getResponseCode();
+
+			  if(responsecode == 200){
+				String line;
+				StringBuilder builder = new StringBuilder();
+				while((line=br.readLine())!=null){
+				  builder.append(line);
+				}
+				br.close();
+				isr.close();
+				is.close();
+
+				System.out.println(builder.toString());
+			  }
+
+
+			} catch (MalformedURLException e) {
+			  e.printStackTrace();
+			} catch (IOException e) {
+			  e.printStackTrace();
+			}
+		  }
+
+		  public static void main(String[] args) {
+			new ReadByGet().start();
+		  }
+		}
+		b.使用HTTP的Post方式与网络交互通信 
+		public class ReadByPost extends Thread {
+		  @Override public void run() {
+			try {
+			  URL url = new URL("网址");
+
+			  HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			  conn.addRequestProperty("encoding", "UTF-8");
+			  conn.setDoInput(true);
+			  conn.setDoOutput(true);
+			  conn.setRequestMethod("POST");
+
+			  OutputStream os = conn.getOutputStream();
+			  OutputStreamWriter osw = new OutputStreamWriter(os);
+			  BufferedWriter bw = new BufferedWriter(osw);
+
+			  bw.write("");
+			  bw.flush();
+
+			  InputStream is = conn.getInputStream();
+			  InputStreamReader isr = new InputStreamReader(is);
+			  BufferedReader br = new BufferedReader(isr);
+			  String line;
+			  StringBuilder builder = new StringBuilder();
+			  while ((line = br.readLine()) != null) {
+				builder.append(line);
+			  }
+			  //关闭资源
+			  System.out.println(builder.toString());
+			} catch (MalformedURLException e) {
+			  e.printStackTrace();
+			} catch (ProtocolException e) {
+			  e.printStackTrace();
+			} catch (IOException e) {
+			  e.printStackTrace();
+			}
+		  }
+
+		  public static void main() {
+			new ReadByPost().start();
+		  }
+		}
+
+		c.使用HttpClient进行Get方式通信,apache有一个HttpClient包
+		public class Get extends Thread {
+		  @Override public void run() {
+
+			HttpClient client = HttpClients.createDefault();
+			HttpGet get = new HttpGet("http://gank.io/api/today");
+			try {
+			  HttpResponse response = client.execute(get);
+			  HttpEntity entity = response.getEntity();
+			  String result = EntityUtils.toString(entity, "UTF-8");
+			  System.out.println(result);
+			} catch (IOException e) {
+			  e.printStackTrace();
+			}
+		  }
+
+		  public static void main(String[] args) {
+			new Get().start();
+		  }
+		}
+		
+		d.使用HttpClient进行Post方式通信
+		public class Post extends Thread {
+
+		  HttpClient client = HttpClients.createDefault();
+
+		  @Override public void run() {
+			HttpPost post = new HttpPost("网址");
+			//设置要传的参数
+			List<BasicNameValuePair> parameters = new ArrayList();
+			parameters.add(new BasicNameValuePair("key", "value"));
+
+			try {
+			  post.setEntity(new UrlEncodedFormEntity(parameters, "UTF-8"));
+			  HttpResponse  response = client.execute(post);
+			  HttpEntity entity = response.getEntity();
+			  String result = EntityUtils.toString(entity, "UTF-8");
+			  System.out.println(result);
+			} catch (UnsupportedEncodingException e) {
+			  e.printStackTrace();
+			} catch (IOException e) {
+			  e.printStackTrace();
+			}
+		  }
+
+		  public static void main(String[] args) {
+			new Post().start();
+		  }
+		}
+		
+		/*android {
+		  //声明 使用
+		  useLibrary 'org.apache.http.legacy'
+		}
+		dependencies {
+		  implementation 'org.apache.httpcomponents:httpclient-android:4.3.5.1'
+		}*/
+	  
+七.java高级技术(反射，泛型，注解)
+	1.反射
+	 a.理解Class类
+		(1).什么是RTTI：
+		运行时类型检查，即Run-time Type Identification。运行时类型信息使得你可以在程序运行时发现和使用类型信息。
+		类的装载：
+			Java的程序在其开始运行之前，并不会被完全加载。所有的类都是在其第一次被使用时，动态的加载到内存当中。
+			所谓的第一次被使用时加载。也就是指当程序创建第一个对类的静态成员的引用的时候，就会被加载。
+			对一个类进行装载的工作过程很简单：类装载器(ClassLoader)会首先检查类是否已经被加载过； 
+			如果检查到之前该类型还没有被进行过装载，则根据类名查找对应的.class文件将其装载进内存当中。
+		“class of classes” 类的类：
+			我们知道一个Java程序实际上就是由一个个的类(即class)组合而成的，但这里的此”Class”并非 彼“class”。 
+			更形象的比喻来说，”Class对象”又被称作”class of classes“，即”类的类“。 
+			之所以我们进行这样的比喻，实际上正是因为每一个类都会有一个”Class对象”； 
+			每当我们编写一个新类，就会产生一个新的”Class对象”(被保存在同名的.class文件)。
+			事实上，“Class对象”的作用 就是用来创建对应类型的所有“常规”对象的。 
+			(所以我们可以把这个对象看做是“雕版”，我们程序中创建使用的对象即印刷出的“百元大钞”）
+			
+			更加细致的来说，也就是当类被类装载器装载进内存之后，就会有一个对应的”Class”类型对象进入内存。 
+			被装载进的这个“Class对象”保存该类的所有自身信息，而JVM也正是通过这个对象来进行RTTI（程序运行时类型检查）工作的。
+	 b.Class对象
+		每个类都会产生一个对应的Class对象，也就是保存在.class文件。所有类都是在对其第一次使用时，动态加载到JVM的，当程序创建一个对类的静态成员的引用时，就会加载这个类。
+		Class对象仅在需要的时候才会加载，static初始化是在类加载时进行的。
+		public class TestMain {
+			public static void main(String[] args) {
+				System.out.println(XYZ.name);
+			  }
+
+			  static class XYZ {
+				public static String name = "luoxn28";
+
+				static {
+				  System.out.println("xyz静态块");
+				}
+
+			  public XYZ() {
+				  System.out.println("xyz构造了");
+				}
+			  }
+			}
+			---------------------------
+			Output:
+			xyz静态块
+			luoxn28
+			
+		类加载器首先会检查这个类的Class对象是否已被加载过，如果尚未加载，默认的类加载器就会根据类名查找对应的.class文件。
+		想在运行时使用类型信息，必须获取对象(比如类Base对象)的Class对象的引用，
+		使用功能Class.forName(“Base”)可以实现该目的，或者使用base.class。
+		注意，有一点很有趣，使用功能”.class”来创建Class对象的引用时，不会自动初始化该Class对象，
+		使用forName()会自动初始化该Class对象。
+		为了使用类而做的准备工作一般有以下3个步骤：
+		加载：由类加载器完成，找到对应的字节码，创建一个Class对象
+		链接：验证类中的字节码，为静态域分配空间
+		初始化：如果该类有超类，则对其初始化，执行静态初始化器和静态初始化块
+			public class TestBase {
+				static int num = 1;
+
+			  static {
+				System.out.println("Base " + num);
+			  }
+			}
+			
+			public class TestMain {
+			  public static void main(String[] args) {
+				// 不会初始化静态块
+				Class clazz1 = TestBase.class;
+				System.out.println("------");
+
+
+				// 会初始化
+				try {
+				  Class clazz2 = Class.forName("com.kunzhuo.xuechelang.test.TestBase");
+				} catch (ClassNotFoundException e) {
+				  e.printStackTrace();
+				}
+			  }
+			}
+			--------------------------
+			Output
+			------
+			Base 1
+	 
+	 c.类型转换前先做检查
+	   (1).instanceof关键字
+	   instanceof是Java中的二元运算符，左边是对象，右边是类；当对象是右边类或子类所创建对象时，返回true；否则，返回false。
+	   这里说明下：
+		类的实例包含本身的实例，以及所有直接或间接子类的实例
+		instanceof左边显式声明的类型与右边操作元必须是同种类或存在继承关系，也就是说需要位于同一个继承树，否则会编译错误
+		null用instanceof跟任何类型比较时都是false
+		向上转型
+		public class Student extends Person{
+
+		  public static void main(String[] args) {
+
+			if ("a" instanceof String) {
+			  //所有的字符串都是String的实例
+			  System.out.println("字符串是Stringde实例");
+			}
+
+			//只是声明了对象并没有创建，所以instanceof判断是false
+			Student s1 = null;
+			Student s2 = null;
+			if (s1 instanceof Student) {
+			  System.out.println("s1是Student的实例");
+			}
+			if (s2 instanceof Student) {
+			  System.out.println("s2是Student的实例");
+			}
+
+			//创建了对象实例，判断为true
+			s1 = new Student();
+			s2 = new Student();
+			if (s1 instanceof Student) {
+			  System.out.println("s1是Student的实例");
+			}
+			if (s2 instanceof Student) {
+			  System.out.println("s2是Student的实例");
+			}
+
+				/*任何类的父类都是Object类，可以这样理解，我们在创建子类对象的时候，
+				调用子类的构造方法时会默认调用父类无参的构造方法，其实是会创建父类的对象的,，有继承关系的可以判断出为true*/
+			if (s1 instanceof Object) {
+			  System.out.println("s1是Object的实例");
+			}
+
+			Object obj = new Student();
+			if (obj instanceof Student) {
+			  System.out.println("obj是Student的实例");
+			}
+
+			Student s3 = new Student();
+			if (s3 instanceof Person) {
+			  System.out.println("s3是Student的父类Person的实例");
+			}
+			
+		  }
+		}
+
+		class Person{}
+		
+	   (2).编译器将检查类型向下转型是否合法，如果不合法将抛出异常。向下转换类型前，可以使用instanceof判断。	
+		public class TestBase {}
+		public class TestDriver extends TestBase{}
+		public class TestMain {
+		public static void main(String[] args) {
+		   TestBase base = new TestDriver();
+			if (base instanceof TestDriver) {
+			  // 这里可以向下转换了
+			  System.out.println("ok");
+			} else {
+			  System.out.println("not ok");
+			}
+		  }
+		}	
+	 
+	 d.反射：运行时类信息
+		Class类与java.lang.reflect类库一起对反射进行了支持，该类库包含Field、Method和Constructor类，这些类的对象由JVM在启动时创建，用以表示未知类里对应的成员。
+		这样的话就可以使用Contructor创建新的对象，用get()和set()方法获取和修改类中与Field对象关联的字段，用invoke()方法调用与Method对象关联的方法。
+		另外，还可以调用getFields()、getMethods()和getConstructors()等许多便利的方法，以返回表示字段、方法、以及构造器对象的数组，这样，对象信息可以在运行时被完全确定下来，而在编译时不需要知道关于类的任何事情。
+		对于RTTI和反射之间的真正区别只在于：
+		RTTI，编译器在编译时打开和检查.class文件
+		反射，运行时打开和检查.class文件
+		
+		PropertyDescriptor类：(属性描述器) 
+	　　PropertyDescriptor类表示JavaBean类通过存储器导出一个属性。主要方法： 
+	　　1. getPropertyType()，获得属性的Class对象； 
+	　　2. getReadMethod()，获得用于读取属性值的方法； 
+	　　3. getWriteMethod()，获得用于写入属性值的方法； 
+	　　4. hashCode()，获取对象的哈希值； 
+	　　5. setReadMethod(Method readMethod)，设置用于读取属性值的方法； 
+	　　6. setWriteMethod(Method writeMethod)，设置用于写入属性值的方法。 
+		
+		Demo
+		public class Person implements Serializable {
+
+		  private String name;
+		  private int age;
+
+		  public Person(String name, int age) {
+			this.name = name;
+			this.age = age;
+		  }
+
+		  public String getName() {
+			return name;
+		  }
+
+		  public void setName(String name) {
+			this.name = name;
+		  }
+
+		  public int getAge() {
+			return age;
+		  }
+
+		  public void setAge(int age) {
+			this.age = age;
+		  }
+
+
+		  public static void main(String[] args) throws IntrospectionException {
+			Person person = new Person("luoxn28", 23);
+			Class clazz = person.getClass();
+
+			Field[] fields = clazz.getDeclaredFields();
+			for (Field field : fields) {
+			  String key = field.getName();
+			  PropertyDescriptor descriptor = new PropertyDescriptor(key, clazz);
+			  Method method = descriptor.getReadMethod();
+			  Object value = null;
+			try {
+				value = method.invoke(person);
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			  System.out.println(key + ":" + value);
+			}
+		  }
+		}
+		
+		以上通过getReadMethod()方法调用类的get函数，可以通过getWriteMethod()方法来调用类的set方法。通常来说，我们不需要使用反射工具，但是它们在创建动态代码会更有用，反射在Java中用来支持其他特性的，例如对象的序列化和JavaBean等。
+		
+	 e.动态代理
+		代理模式是为了提供额外或不同的操作，而插入的用来替代”实际”对象的对象，这些操作涉及到与”实际”对象的通信，因此代理通常充当中间人角色。
+		Java的动态代理比代理的思想更前进了一步，它可以动态地创建并代理并动态地处理对所代理方法的调用。在动态代理上所做的所有调用都会被重定向到单一的调用处理器上，它的工作是揭示调用的类型并确定相应的策略。
+		在java的动态代理机制中，有两个重要的类或接口，一个是 InvocationHandler(Interface)、另一个则是 Proxy(Class)，这一个类和接口是实现我们动态代理所必须用到的。
+		InvocationHandler:
+
+		InvocationHandler is the interface implemented by the invocation handler of a proxy instance. 
+		Each proxy instance has an associated invocation handler. When a method is invoked on a proxy instance, the method invocation is encoded and dispatched to the invoke method of its invocation handler.
+		每一个动态代理类都必须要实现InvocationHandler这个接口，并且每个代理类的实例都关联到了一个handler，当我们通过代理对象调用一个方法的时候，这个方法的调用就会被转发为由InvocationHandler这个接口的 invoke 方法来进行调用。
+		我们来看看InvocationHandler这个接口的唯一一个方法 invoke 方法：
+		Object invoke(Object proxy, Method method, Object[] args) throws Throwable
+		
+		我们看到这个方法一共接受三个参数，那么这三个参数分别代表什么呢？
+		Object invoke(Object proxy, Method method, Object[] args) throws Throwable
+		proxy:　　指代我们所代理的那个真实对象
+		method:　　指代的是我们所要调用真实对象的某个方法的Method对象
+		args:　　指代的是调用真实对象某个方法时接受的参数
+		
+		Proxy.newProxyInstance(ClassLoader loader,Class<?>[] interfaces,InvocationHandler h) throws IllegalArgumentException;
+		loader:　　一个ClassLoader对象，定义了由哪个ClassLoader对象来对生成的代理对象进行加载
+		interfaces:　　一个Interface对象的数组，表示的是我将要给我需要代理的对象提供一组什么接口，如果我提供了一组接口给它，那么这个代理对象就宣称实现了该接口(多态)，这样我就能调用这组接口中的方法了
+		h:　　一个InvocationHandler对象，表示的是当我这个动态代理对象在调用方法的时候，会关联到哪一个InvocationHandler对象上
+		
+		Demo：
+		接口和实现
+		public interface  Interface {
+			 void doSomething();
+			 void somethingElse(String arg);
+		}
+
+		class RealObject implements Interface {
+			public void doSomething() {
+				System.out.println("doSomething.");
+			}
+			public void somethingElse(String arg) {
+				System.out.println("somethingElse " + arg);
+			}
+		}
+		
+		动态代理对象处理器
+		public class DynamicProxyHandler implements InvocationHandler {
+
+			private Object proxyed;
+			
+			public DynamicProxyHandler(Object proxyed) {
+				this.proxyed = proxyed;
+			}
+					
+			@Override
+			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+				//　　在代理真实对象前我们可以添加一些自己的操作
+				System.out.println("before rent house");
+				
+				System.out.println("Method:" + method);
+				
+				//    当代理对象调用真实对象的方法时，其会自动的跳转到代理对象关联的handler对象的invoke方法来进行调用
+				method.invoke(proxyed, args);
+				
+				//　　在代理真实对象后我们也可以添加一些自己的操作
+				System.out.println("after rent house");
+				
+				return null;
+			}
+
+		}
+
+		main方法
+		public class TestMain {
+	
+			public static void main(String[] args){
+				
+				//	    我们要代理的真实对象
+				RealObject realSubject = new RealObject();
+
+				//    我们要代理哪个真实对象，就将该对象传进去，最后是通过该真实对象来调用其方法的
+				InvocationHandler handler = new DynamicProxyHandler(realSubject);
+
+				/*
+				 * 通过Proxy的newProxyInstance方法来创建我们的代理对象，我们来看看其三个参数
+				 * 第一个参数 handler.getClass().getClassLoader() ，我们这里使用handler这个类的ClassLoader对象来加载我们的代理对象
+				 * 第二个参数realSubject.getClass().getInterfaces()，我们这里为代理对象提供的接口是真实对象所实行的接口，表示我要代理的是该真实对象，这样我就能调用这组接口中的方法了
+				 * 第三个参数handler， 我们这里将这个代理对象关联到了上方的 InvocationHandler 这个对象上
+				 */
+				Interface subject = (Interface)Proxy.newProxyInstance(handler.getClass().getClassLoader(), realSubject
+						.getClass().getInterfaces(), handler);
+				
+				System.out.println(subject.getClass().getName());
+				
+				subject.doSomething();
+				subject.somethingElse("luoxn28");
+				  
+			}
+
+		}
+		
+		----------------
+		Output:
+		com.sun.proxy.$Proxy0
+		before rent house
+		Method:public abstract void test.Interface.doSomething()
+		doSomething.
+		after rent house
+		before rent house
+		Method:public abstract void test.Interface.somethingElse(java.lang.String)
+		somethingElse luoxn28
+		after rent house
+		
+		
+		我们首先来看看 com.sun.proxy.$Proxy0 这东西，我们看到，这个东西是由 System.out.println(subject.getClass().getName()); 这条语句打印出来的，那么为什么我们返回的这个代理对象的类名是这样的呢？
+		
+		Interface subject = (Interface)Proxy.newProxyInstance(handler.getClass().getClassLoader(), realSubject
+						.getClass().getInterfaces(), handler);
+		可能我以为返回的这个代理对象会是Interface类型的对象，或者是InvocationHandler的对象，结果却不是，首先我们解释一下为什么我们这里可以将其转化为Interface类型的对象？
+		原因就是在newProxyInstance这个方法的第二个参数上，我们给这个代理对象提供了一组什么接口，那么我这个代理对象就会实现了这组接口，这个时候我们当然可以将这个代理对象强制类型转化为这组接口中的任意一个，因为这里的接口是Interface类型，所以就可以将其转化为Interface类型了。
+		同时我们一定要记住，通过 Proxy.newProxyInstance 创建的代理对象是在jvm运行时动态生成的一个对象，它并不是我们的InvocationHandler类型，也不是我们定义的那组接口的类型，而是在运行是动态生成的一个对象，并且命名方式都是这样的形式，以$开头，proxy为中，最后一个数字表示对象的标号。
+	
+		接着我们来看看这两句 
+		subject.doSomething();
+        subject.somethingElse("luoxn28");
+		这里是通过代理对象来调用实现的那种接口中的方法，这个时候程序就会跳转到由这个代理对象关联到的 handler 中的invoke方法去执行，
+		而我们的这个 handler 对象又接受了一个 RealObject类型的参数，表示我要代理的就是这个真实对象(new DynamicProxyHandler(realSubject)),
+		所以此时就会调用 handler 中的invoke方法去执行：
+		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+			//　　在代理真实对象前我们可以添加一些自己的操作
+			System.out.println("before rent house");
+			
+			System.out.println("Method:" + method);
+			
+			//    当代理对象调用真实对象的方法时，其会自动的跳转到代理对象关联的handler对象的invoke方法来进行调用
+			method.invoke(proxyed, args);
+			
+			//　　在代理真实对象后我们也可以添加一些自己的操作
+			System.out.println("after rent house");
+			
+			return null;
+		}
+		我们看到，在真正通过代理对象来调用真实对象的方法的时候，我们可以在该方法前后添加自己的一些操作，同时我们看到我们的这个 method 对象是这样的：
+		Method:public abstract void test.Interface.doSomething()
+		Method:public abstract void test.Interface.somethingElse(java.lang.String)
+	
+		正好就是我们的Interface接口中的两个方法，这也就证明了当我通过代理对象来调用方法的时候，起实际就是委托由其关联到的 handler 对象的invoke方法中来调用，并不是自己来真实调用，而是通过代理的方式来调用的。
+		这就是我们的java动态代理机制
+
+	2.泛型
+	3.注解
 		   
 		   
 		   
