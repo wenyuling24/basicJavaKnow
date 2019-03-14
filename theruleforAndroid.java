@@ -3738,8 +3738,8 @@
 	  
 七.java高级技术(反射，泛型，注解)
 	1.反射
-	 a.理解Class类
-		(1).什么是RTTI：
+	 1).理解Class类
+		a.什么是RTTI：
 		运行时类型检查，即Run-time Type Identification。运行时类型信息使得你可以在程序运行时发现和使用类型信息。
 		类的装载：
 			Java的程序在其开始运行之前，并不会被完全加载。所有的类都是在其第一次被使用时，动态的加载到内存当中。
@@ -3756,7 +3756,7 @@
 			
 			更加细致的来说，也就是当类被类装载器装载进内存之后，就会有一个对应的”Class”类型对象进入内存。 
 			被装载进的这个“Class对象”保存该类的所有自身信息，而JVM也正是通过这个对象来进行RTTI（程序运行时类型检查）工作的。
-	 b.Class对象
+	 2).Class对象
 		每个类都会产生一个对应的Class对象，也就是保存在.class文件。所有类都是在对其第一次使用时，动态加载到JVM的，当程序创建一个对类的静态成员的引用时，就会加载这个类。
 		Class对象仅在需要的时候才会加载，static初始化是在类加载时进行的。
 		public class TestMain {
@@ -3818,8 +3818,8 @@
 			------
 			Base 1
 	 
-	 c.类型转换前先做检查
-	   (1).instanceof关键字
+	 3).类型转换前先做检查
+	   a.instanceof关键字
 	   instanceof是Java中的二元运算符，左边是对象，右边是类；当对象是右边类或子类所创建对象时，返回true；否则，返回false。
 	   这里说明下：
 		类的实例包含本身的实例，以及所有直接或间接子类的实例
@@ -3876,7 +3876,7 @@
 
 		class Person{}
 		
-	   (2).编译器将检查类型向下转型是否合法，如果不合法将抛出异常。向下转换类型前，可以使用instanceof判断。	
+	   b.编译器将检查类型向下转型是否合法，如果不合法将抛出异常。向下转换类型前，可以使用instanceof判断。	
 		public class TestBase {}
 		public class TestDriver extends TestBase{}
 		public class TestMain {
@@ -3891,7 +3891,7 @@
 		  }
 		}	
 	 
-	 d.反射：运行时类信息
+	 4).反射：运行时类信息
 		Class类与java.lang.reflect类库一起对反射进行了支持，该类库包含Field、Method和Constructor类，这些类的对象由JVM在启动时创建，用以表示未知类里对应的成员。
 		这样的话就可以使用Contructor创建新的对象，用get()和set()方法获取和修改类中与Field对象关联的字段，用invoke()方法调用与Method对象关联的方法。
 		另外，还可以调用getFields()、getMethods()和getConstructors()等许多便利的方法，以返回表示字段、方法、以及构造器对象的数组，这样，对象信息可以在运行时被完全确定下来，而在编译时不需要知道关于类的任何事情。
@@ -3965,7 +3965,7 @@
 		
 		以上通过getReadMethod()方法调用类的get函数，可以通过getWriteMethod()方法来调用类的set方法。通常来说，我们不需要使用反射工具，但是它们在创建动态代码会更有用，反射在Java中用来支持其他特性的，例如对象的序列化和JavaBean等。
 		
-	 e.动态代理
+	 5).动态代理
 		代理模式是为了提供额外或不同的操作，而插入的用来替代”实际”对象的对象，这些操作涉及到与”实际”对象的通信，因此代理通常充当中间人角色。
 		Java的动态代理比代理的思想更前进了一步，它可以动态地创建并代理并动态地处理对所代理方法的调用。在动态代理上所做的所有调用都会被重定向到单一的调用处理器上，它的工作是揭示调用的类型并确定相应的策略。
 		在java的动态代理机制中，有两个重要的类或接口，一个是 InvocationHandler(Interface)、另一个则是 Proxy(Class)，这一个类和接口是实现我们动态代理所必须用到的。
@@ -4107,8 +4107,248 @@
 	
 		正好就是我们的Interface接口中的两个方法，这也就证明了当我通过代理对象来调用方法的时候，起实际就是委托由其关联到的 handler 对象的invoke方法中来调用，并不是自己来真实调用，而是通过代理的方式来调用的。
 		这就是我们的java动态代理机制
-
+		
 	2.泛型
+	 1).泛型定义：泛型即“参数化类型”。一提到参数，最熟悉的就是定义方法时有形参，然后调用此方法时传递实参。那么参数化类型怎么理解呢？
+		顾名思义，就是将类型由原来的具体的类型参数化，类似于方法中的变量参数，此时类型也定义成参数形式（可以称之为类型形参），
+		然后在使用/调用时传入具体的类型（类型实参）。
+		泛型的本质是为了参数化类型（在不创建新的类型的情况下，通过泛型指定的不同类型来控制形参具体限制的类型）。也就是说在泛型使用过程中，
+		操作的数据类型被指定为一个参数，这种参数类型可以用在类、接口和方法中，分别被称为泛型类、泛型接口、泛型方法。
+		特性：泛型只在编译阶段有效
+	 2).泛型类、泛型接口、泛型方法
+		a.泛型类
+		泛型类型用于类的定义中，被称为泛型类。通过泛型可以完成对一组类的操作对外开放相同的接口。最典型的就是各种容器类，如：List、Set、Map。
+		泛型类的最基本写法（这么看可能会有点晕，会在下面的例子中详解）：
+		//此处T可以随便写为任意标识，常见的如T、E、K、V等形式的参数常用于表示泛型
+		//在实例化泛型类时，必须指定T的具体类型
+		public class Generic<T>{ 
+			//key这个成员变量的类型为T,T的类型由外部指定  
+			private T key;
+
+			public Generic(T key) { //泛型构造方法形参key的类型也为T，T的类型由外部指定
+				this.key = key;
+			}
+
+			public T getKey(){ //泛型方法getKey的返回值类型为T，T的类型由外部指定
+				return key;
+			}
+		}
+	
+		public class Main {
+			public static void main(String[] args) {
+				//泛型的类型参数只能是类类型（包括自定义类），不能是简单类型
+				//传入的实参类型需与泛型的类型参数类型相同，即为Integer.
+				Generic<Integer> genericInteger = new Generic<Integer>(123456);
+
+				//传入的实参类型需与泛型的类型参数类型相同，即为String.
+				Generic<String> genericString = new Generic<String>("key_vlaue");
+				System.out.println("泛型测试 "+"key is " + genericInteger.getKey());
+				System.out.println("泛型测试 "+"key is " + genericString.getKey());
+			}
+		}
+		--------------------------
+		Output
+		泛型测试 key is 123456
+		泛型测试 key is key_vlaue
+
+		定义的泛型类，就一定要传入泛型类型实参么？并不是这样，在使用泛型的时候如果传入泛型实参，则会根据传入的泛型实参做相应的限制，此时泛型才会起到本应起到的限制作用。
+		如果不传入泛型类型实参的话，在泛型类中使用泛型的方法或成员变量定义的类型可以为任何的类型。
+		public class Main {
+			@SuppressWarnings({ "unchecked", "rawtypes" })
+			public static void main(String[] args) {
+				//泛型的类型参数只能是类类型（包括自定义类），不能是简单类型
+				Generic generic = new Generic("111111");
+				Generic generic1 = new Generic(4444);
+				Generic generic2 = new Generic(55.55);
+				Generic generic3 = new Generic(false);
+
+				System.out.println("泛型测试 "+"key is " + generic.getKey());
+				System.out.println("泛型测试 "+"key is " + generic1.getKey());
+				System.out.println("泛型测试 "+"key is " + generic2.getKey());
+				System.out.println("泛型测试 "+"key is " + generic3.getKey());
+			}
+		}
+		------------------------------------
+		Output
+		泛型测试 key is 111111
+		泛型测试 key is 4444
+		泛型测试 key is 55.55
+		泛型测试 key is false
+
+		注意：
+		泛型的类型参数只能是类类型，不能是简单类型。
+		不能对确切的泛型类型使用instanceof操作。如下面的操作是非法的，编译时会出错。
+		　　if(ex_num instanceof Generic<Number>){ }
+		
+		b.泛型接口
+		泛型接口与泛型类的定义及使用基本相同。泛型接口常被用在各种类的生产器中，可以看一个例子：
+		//定义一个泛型接口
+		public interface Generator<T> {
+			public T next();
+		}
+	
+		当实现泛型接口的类，未传入泛型实参时：
+		/**
+		 * 未传入泛型实参时，与泛型类的定义相同，在声明类的时候，需将泛型的声明也一起加到类中
+		 * 即：class FruitGenerator<T> implements Generator<T>{
+		 * 如果不声明泛型，如：class FruitGenerator implements Generator<T>，编译器会报错："Unknown class"
+		 */
+		class FruitGenerator<T> implements Generator<T>{
+			@Override
+			public T next() {
+				return null;
+			}
+		}
+	
+		/**
+		 * 传入泛型实参时：
+		 * 定义一个生产器实现这个接口,虽然我们只创建了一个泛型接口Generator<T>
+		 * 但是我们可以为T传入无数个实参，形成无数种类型的Generator接口。
+		 * 在实现类实现泛型接口时，如已将泛型类型传入实参类型，则所有使用泛型的地方都要替换成传入的实参类型
+		 * 即：Generator<T>，public T next();中的的T都要替换成传入的String类型。
+		 */
+		public class FruitGeneratorImp implements Generator<String>{
+			
+			String[] str = new String[]{"woc", "wori", "nimab"};
+			
+			@Override
+			public String next() {
+				
+				Random rand = new Random();
+				
+				return str[rand.nextInt()];
+			}
+			
+		}
+		
+		c.泛型通配符(?)
+		我们知道Ingeter是Number的一个子类，同时在特性章节中我们也验证过Generic<Ingeter>与Generic<Number>实际上是相同的一种基本类型。那么问题来了，在使用Generic<Number>作为形参的方法中，能否使用Generic<Ingeter>的实例传入呢？在逻辑上类似于Generic<Number>和Generic<Ingeter>是否可以看成具有父子关系的泛型类型呢？
+		为了弄清楚这个问题，我们使用Generic<T>这个泛型类继续看下面的例子：
+		public class Main {
+			public static void showKeyValue(Generic<?> obj){
+				System.out.println("泛型测试 "+"key value is " + obj.getKey());
+			}
+			
+			public static void main(String[] args) {
+				Generic<Integer> gInteger = new Generic<Integer>(123);
+				Generic<Number> gNumber = new Generic<Number>(456);
+
+				showKeyValue(gNumber);
+				//showKeyValue(Generic<Number> obj)
+				// showKeyValue这个方法编译器会为我们报错：Generic<java.lang.Integer> 
+				// cannot be applied to Generic<java.lang.Number>
+				 showKeyValue(gInteger);
+			}
+		}
+		类型通配符一般是使用？代替具体的类型实参，注意了，此处’？’是类型实参，而不是类型形参 。
+		重要说三遍！此处’？’是类型实参，而不是类型形参 ！ 此处’？’是类型实参，而不是类型形参 ！
+		再直白点的意思就是，此处的？和Number、String、Integer一样都是一种实际的类型，可以把？看成所有类型的父类。是一种真实的类型。
+		可以解决当具体类型不确定的时候，这个通配符就是 ?  ；当操作类型时，不需要使用类型的具体功能时，只使用Object类中的功能。那么可以用 ? 通配符来表未知类型。
+		
+		d.泛型方法
+		泛型方法使得该方法能独立于类而产生变化。我们可以写一个泛型方法，该方法在调用时可以接收不同类型的参数。根据传递给泛型方法的参数类型，编译器适当地处理每一个方法调用。
+		无论何时，只要你能做到，你就应该尽量使用泛型方法。也就是说，如果使用泛型方法可以取代将整个类泛型化，那么就应该只使用泛型方法，因为它可以使事情更清楚明白。另外，对于一个static的方法而言，无法访问泛型类的类型参数。所以，如果static方法需要使用泛型能力，就必须使其成为泛型方法。
+		下面是定义泛型方法的规则：?
+		(1).所有泛型方法声明都有一个类型参数声明部分（由尖括号分隔），该类型参数声明部分在方法返回类型之前（在下面例子中的<E>）。
+		(2).每一个类型参数声明部分包含一个或多个类型参数，参数间用逗号隔开。一个泛型参数，也被称为一个类型变量，是用于指定一个泛型类型名称的标识符。
+		(3).类型参数能被用来声明返回值类型，并且能作为泛型方法得到的实际参数类型的占位符。
+		(4).泛型方法体的声明和其他方法一样。注意类型参数只能代表引用型类型，不能是原始类型（像int,double,char的等）。
+		下面举一些泛型方法的示例：
+		/**
+		 * public 与 返回值中间<T>非常重要，可以理解为声明此方法为泛型方法。
+		 * 只有声明了<T>等的方法才是泛型方法，泛型类中的使用了泛型的成员方法并不是泛型方法。
+		 * <T>表明该方法将使用泛型类型T，此时才可以在方法中使用泛型类型T。
+		 * 与泛型类的定义一样，此处T可以随便写为任意标识，常见的如T、E、K、V等形式的参数常用于表示泛型。
+		 */
+		public class GenericMethods {
+			public <T> void genericMethod1(T t){
+					System.out.println(t.getClass().getName());
+			}
+			public <T> T genericMethod2( Class<T> tClass ) throws InstantiationException ,
+					IllegalAccessException {
+				T t = tClass.newInstance();
+				return t;
+			}
+			public static <T> void genericMethod3( T[] inputArray ) {
+				// 输出数组元素            
+				for ( T element : inputArray ){        
+					System.out.printf( "%s ", element );
+				}
+			}
+		}
+		说明一下，定义泛型方法时，必须在返回值前边加一个<T>，来声明这是一个泛型方法，持有一个泛型T，然后才可以用泛型T作为方法的返回值或参数类型等。
+		
+		泛型类是在实例化类的时候指明泛型的具体类型，而泛型方法是在调用方法的时候指明泛型的具体类型 。
+		泛型方法可以在任何地方和任何场景中使用，但是有一种情况是非常特殊的，当泛型方法出现在泛型类中时，我们再通过一个例子看一下：
+		/**
+		 * 泛型类
+		 * @author Administrator
+		 *
+		 * @param <T>
+		 */
+		public class GenericClassDemo<T> {
+			/**
+			 * 这个不是泛型方法，只是使用了泛型类中已声明的T
+			 */
+			public void show1(T t){
+				System.out.println(t.toString());
+			}
+			/**
+			 * 泛型方法，使用泛型E，这种泛型E可以为任意类型。可以类型与T相同，也可以不同。
+			 * 由于下面的泛型方法在声明的时候声明了泛型<E>，因此即使在泛型类中并未声明泛型，
+			 * 编译器也能够正确识别泛型方法中识别的泛型。
+			 */
+			public <E> void show2(E e){
+				System.out.println(e.toString());
+			}
+			/**
+			 * 在泛型类中声明了一个泛型方法，使用泛型T，注意这个T是一种全新的类型;
+			 * 可以与泛型类中声明的T不是同一种类型。
+			 */
+			public <T> void show3(T t){
+				System.out.println(t.toString());
+			}
+		}
+		
+		泛型方法和可变参数
+		public class Main {
+	
+			public <T> void printArgs( T... args ){
+				for(T t : args){
+					System.out.println(t + " ");
+				}
+			}
+			public static <T> List<T> toList(T... args){
+				List<T> result = new ArrayList<T>();
+				for(T item:args)
+					result.add(item);
+				return result;	
+			}
+			
+			public static void main(String[] args) {
+				Main gmt = new Main();
+				gmt.printArgs("A","B"); // A B
+				List ls = Main.toList("A", "vcwasd");
+				System.out.println(ls); // [A]
+				ls = Main.toList("A","B","C"); 
+				System.out.println(ls); // [A,B,C]
+			}
+		}
+		
+		静态方法使用泛型
+		静态方法无法访问类上定义的泛型，如果静态方法操作的引用数据类型不确定的时候，必须要将泛型定义在方法上。即：如果静态方法要使用泛型的话，必须将静态方法也定义成泛型方法 。
+		/**
+		 * 如果在类中定义使用泛型的静态方法，需要添加额外的泛型声明
+		 * 即使静态方法不可以使用泛型类中已经声明过的泛型（需将这个方法定义成泛型方法）
+		 * 如：public static void genericMethod(T t){..},此时编译器会提示错误信息：
+		 * "StaticGenerator cannot be refrenced from static context"
+		 */
+		public static <T> void  genericMethod(T t) {
+			// ...
+			System.out.println(t.toString());
+		}
+		
+	
 	3.注解
 		   
 		   
