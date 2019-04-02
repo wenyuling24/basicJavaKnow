@@ -3891,13 +3891,20 @@
 		  }
 		}	
 	 
-	 4).反射：运行时类信息
+	 4).反射(Field关键字)：运行时类信息
 		Class类与java.lang.reflect类库一起对反射进行了支持，该类库包含Field、Method和Constructor类，这些类的对象由JVM在启动时创建，用以表示未知类里对应的成员。
 		这样的话就可以使用Contructor创建新的对象，用get()和set()方法获取和修改类中与Field对象关联的字段，用invoke()方法调用与Method对象关联的方法。
 		另外，还可以调用getFields()、getMethods()和getConstructors()等许多便利的方法，以返回表示字段、方法、以及构造器对象的数组，这样，对象信息可以在运行时被完全确定下来，而在编译时不需要知道关于类的任何事情。
 		对于RTTI和反射之间的真正区别只在于：
 		RTTI，编译器在编译时打开和检查.class文件
 		反射，运行时打开和检查.class文件
+		
+		如何获取Field类对象
+		一共有4种方法:
+		Class.getFields(): 获取类中public类型的属性，返回一个包含某些?Field 对象的数组，该数组包含此 Class 对象所表示的类或接口的所有可访问公共字段
+		getDeclaredFields(): 获取类中所有的属性(public、protected、default、private)，但不包括继承的属性，返回 Field 对象的一个数组
+		getField(String name)： 获取类特定的方法，name参数指定了属性的名称
+		getDeclaredField(String name): 获取类特定的方法，name参数指定了属性的名称
 		
 		PropertyDescriptor类：(属性描述器) 
 	　　PropertyDescriptor类表示JavaBean类通过存储器导出一个属性。主要方法： 
@@ -3906,7 +3913,7 @@
 	　　3. getWriteMethod()，获得用于写入属性值的方法； 
 	　　4. hashCode()，获取对象的哈希值； 
 	　　5. setReadMethod(Method readMethod)，设置用于读取属性值的方法； 
-	　　6. setWriteMethod(Method writeMethod)，设置用于写入属性值的方法。 
+	　　6. setWriteMethod(Method writeMethod)，设置用于写入属性值的方法。
 		
 		Demo
 		public class Person implements Serializable {
@@ -3940,9 +3947,9 @@
 			Person person = new Person("luoxn28", 23);
 			Class clazz = person.getClass();
 
-			Field[] fields = clazz.getDeclaredFields();
+			Field[] fields = clazz.getDeclaredFields();//获取类中所有的属性(public、protected、default、private)，但不包括继承的属性，返回 Field 对象的一个数组
 			for (Field field : fields) {
-			  String key = field.getName();
+			  String key = field.getName();// 获取属性的名字
 			  PropertyDescriptor descriptor = new PropertyDescriptor(key, clazz);
 			  Method method = descriptor.getReadMethod();
 			  Object value = null;
@@ -4350,16 +4357,230 @@
 		
 	
 	3.注解
+	 1).注解基本概念及java内置注解
+		注解(元数据)为我们在代码中添加信息提供一种形式化的方法，我们可以在某个时刻非常方便的使用这些数据。
+		将的通俗一点，就是为这个方法增加的说明或功能。例如：@Overvide这个注解就用来说明这个方式重写父类的。
+		Java目前内置了三种注解@Override、@Deprecated、@SuppressWarnnings
+		
+		@Override：用于标识方法，标识该方法属于重写父类的方法
+		@Target(ElementType.METHOD)
+		@Retention(RetentionPolicy.SOURCE)
+		public @interface Override {
+		}
+		
+		@Deprecated：用于标识方法或类，标识该类或方法已过时，建议不要使用
+		@Documented
+		@Retention(RetentionPolicy.RUNTIME)
+		@Target(value={CONSTRUCTOR, FIELD, LOCAL_VARIABLE, METHOD, PACKAGE, PARAMETER, TYPE})
+		public @interface Deprecated {
+		}
+		
+		@SuppressWarnnings:用于有选择的关闭编译器对类、方法、成员变量、变量初始化的警告
+		@Target({TYPE, FIELD, METHOD, PARAMETER, CONSTRUCTOR, LOCAL_VARIABLE})
+		@Retention(RetentionPolicy.SOURCE)
+		public @interface SuppressWarnings {
+			String[] value();
 		   
 		   
+	 2).元注解
+		Java提供了四种元注解，即修饰注解的注解。观察上面源码可以发现三种，即：@Target、@Retention、@Document、@Inherited
+		a.@Target  
+		表示该注解用于什么地方，可能的值在枚举类 ElemenetType 中，包括： 
+          ElemenetType.CONSTRUCTOR 构造器声明 
+          ElemenetType.FIELD 域声明（包括 enum 实例） 
+          ElemenetType.LOCAL_VARIABLE 局部变量声明
+          ElemenetType.ANNOTATION_TYPE 作用于注解量声明
+          ElemenetType.METHOD 方法声明
+          ElemenetType.PACKAGE 包声明 
+          ElemenetType.PARAMETER 参数声明 
+          ElemenetType.TYPE 类，接口（包括注解类型）或enum声明 
+		
+		b.@Retention
+		定义注解的保留策略
+		@Retention(RetentionPolicy.SOURCE)   //注解仅存在于源码中，在class字节码文件中不包含
+		@Retention(RetentionPolicy.CLASS)     // 默认的保留策略，注解会在class字节码文件中存在，但运行时无法获得，
+		@Retention(RetentionPolicy.RUNTIME)  // 注解会在class字节码文件中存在，在运行时可以通过反射获取到
+		首先要明确生命周期长度 SOURCE < CLASS < RUNTIME ，所以前者能作用的地方后者一定也能作用。
+		一般如果需要在运行时去动态获取注解信息，那只能用 RUNTIME 注解；
+		如果要在编译时进行一些预处理操作，比如生成一些辅助代码（如 ButterKnife），就用 CLASS注解；
+		如果只是做一些检查性的操作，比如 @Override 和 @SuppressWarnings，则可选用 SOURCE 注解。  
 		   
-		   
-		   
-		   
-		   
-		   
-		   
-		   
+		c.@Document：说明该注解将被包含在javadoc中
+		@Documented
+		@Retention(RetentionPolicy.RUNTIME)
+		@Target(ElementType.ANNOTATION_TYPE)
+		public @interface Documented {
+		}
+		即拥有这个注解的元素可以被javadoc此类的工具文档化。它代表着此注解会被javadoc工具提取成文档。在doc文档中的内容会因为此注解的信息内容不同而不同。相当与@return,@param 等。
+		
+		d.@Inherited：说明子类可以继承父类中的该注解
+		@Documented
+		@Retention(RetentionPolicy.RUNTIME)
+		@Target(ElementType.ANNOTATION_TYPE)
+		public @interface Inherited {
+		}
+
+		Demo
+		//适用类、接口（包括注解类型）或枚举  
+		@Retention(RetentionPolicy.RUNTIME)
+		@Target(ElementType.TYPE)
+		public @interface ClassInfo {
+			String value();
+		}
+
+		//适用field属性，也包括enum常量  
+		@Retention(RetentionPolicy.RUNTIME)
+		@Target(ElementType.FIELD)
+		public @interface FieldInfo {
+			int[] value();
+		}
+
+		//适用方法
+		@Retention(RetentionPolicy.RUNTIME)
+		@Target(ElementType.METHOD)
+		public @interface MethodInfo {
+			String name() default "long";
+			String data();
+			int age() default 28;
+		}
+
+
+		@ClassInfo("Test Class")
+		public class TestRuntimeAnnotation {
+			
+			@FieldInfo(value = {1,2})
+			public String filedInfo = "FiledInfo";
+			
+			@FieldInfo(value = {100000})
+			public int i = 100;
+			
+			@MethodInfo(name = "BlueBird", data = "Big", age = 418523)
+			public static String getMethodInfo(){
+				return TestRuntimeAnnotation.class.getSimpleName();
+			}
+		}
+		
+		@ClassInfo("Test Class")
+		public class TestRuntimeAnnotation {
+			
+			@FieldInfo(value = {1,2})
+			public String filedInfo = "FiledInfo";
+			
+			@FieldInfo(value = {100000})
+			public int i = 100;
+			
+			@MethodInfo(name = "BlueBird", data = "Big", age = 418523)
+			public static String getMethodInfo(){
+				return TestRuntimeAnnotation.class.getSimpleName();
+			}
+		}
+
+		public class Main {
+	
+			public static void main(String[] args) {
+				_testRunTimeAnnotation();
+			}
+			
+			//在代码中获取注解信息
+			private static void _testRunTimeAnnotation(){
+				StringBuffer sb = new StringBuffer();
+				Class<?> cls = TestRuntimeAnnotation.class;
+				Constructor<?>[] constructors = cls.getConstructors();
+				//获取指定类型的注解
+				//Class注解
+				sb.append("Class注解：").append("\n");
+				ClassInfo classInfo = cls.getAnnotation(ClassInfo.class);
+				if(classInfo != null){
+					sb.append(Modifier.toString(cls.getModifiers()))
+					.append(" ")
+					.append(cls.getSimpleName())
+					.append("\n");
+
+					sb.append("注解值").append(" ")
+					.append(classInfo.value().toString())
+					.append("\n\n");
+				}
+				
+				//Field注解
+				sb.append("Field注解： ").append("\n");
+				Field[] fields = cls.getDeclaredFields();
+				for(Field field : fields){
+					FieldInfo fieldInfo = field.getAnnotation(FieldInfo.class);
+					if(fieldInfo != null){
+						sb.append(Modifier.toString(field.getModifiers()))
+						.append(" ")  
+						.append(field.getType().getSimpleName())
+						.append(" ")  
+						.append(field.getName()).append("\n");  
+						sb.append("注解值: ")
+						.append(Arrays.toString(fieldInfo.value()))
+						.append("\n\n");  
+					}
+				}
+				
+				//method注解
+				sb.append("Method注解：").append("\n");  
+				Method[] methods = cls.getDeclaredMethods();
+				for(Method method : methods){
+					MethodInfo methodInfo = method.getAnnotation(MethodInfo.class);
+					if(methodInfo != null){
+						sb.append(Modifier.toString(method.getModifiers()))
+						.append(" ")  
+						.append(method.getReturnType().getSimpleName())
+						.append(" ")  
+						.append(method.getName())
+						.append("\n");  
+						sb.append("注解值: ").append("\n");  
+						sb.append("name: ").append(methodInfo.name()).append("\n");  
+						sb.append("data: ").append(methodInfo.data()).append("\n");  
+						sb.append("age: ").append(methodInfo.age()).append("\n"); 
+					}
+				}
+				
+				System.out.println(sb.toString());
+			}
+			
+		}
+
+		-------------------------------
+		Output
+		Class注解：
+		public TestRuntimeAnnotation
+		注解值 Test Class
+
+		Field注解： 
+		public String filedInfo
+		注解值: [1, 2]
+
+		public int i
+		注解值: [100000]
+
+		Method注解：
+		public static String getMethodInfo
+		注解值: 
+		name: BlueBird
+		data: Big
+		age: 418523
+
+	 3).自定义注解
+		语法: public @interface xxx{}
+
+		使用:@xxx
+		注解只有成员变量，没有方法
+		
+		Demo
+		public @interface DiyInfo {
+			public String value();
+		}
+
+		class TestAnnotation{
+			
+			@DiyInfo("fcsdad")
+			public void getMsg(){
+				
+			}
+		}
+		
 		   
 		   
 		   
