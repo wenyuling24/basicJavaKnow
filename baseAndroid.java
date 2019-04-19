@@ -798,6 +798,7 @@
 				}
 			  }
 			  
+			<8>https://github.com/H07000223/FlycoDialog_Master.git 一个自定义Dialog的工具
 		5).Menu
 		Android的菜单分为三种类型：选项菜单(Option Menu)、上下文菜单(Context Menu)、子菜单(Sub Menu)
 		注：其中，Sub Menu就是将功能相同的操作分组显示，他作用在OptionsMenu上，是OptionsMenu的二级菜单
@@ -1023,32 +1024,630 @@
 
 		}
 
+		效果长按弹出菜单 附带三个操作
 		
+		c.子菜单(SubMenu)
+		就是将功能相同的操作分组显示，他作用在OptionsMenu上，是OptionsMenu的二级菜单
+
+		实现步骤：
+		<1>重写onCreateOptionsMenu()方法
+		<2>点击事件，重写onOptionsItemSelected()方法
+
+		注意：
+		<1>SubMenu.add(groupId, itemId, order, title);
+		因为每个SubMenu有一个groupId，所以需要使用这个groupId区别是点击了那个子菜单
 		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		c.子菜单
+		public class MainActivity extends AppCompatActivity {
+
+		  @Override protected void onCreate(Bundle savedInstanceState) {
+			super.onCreate(savedInstanceState);
+			setContentView(R.layout.activity_main);
+
+		  }
+
+		  @Override
+		  public boolean onCreateOptionsMenu(Menu menu) {
+			SubMenu fileMenu = menu.addSubMenu("查看文件");
+			SubMenu editMenu = menu.addSubMenu("输入文件");
+			//添加菜单项
+			fileMenu.add(1, 1, 1, "文件1");
+			fileMenu.add(1, 2, 1, "文件2");
+			fileMenu.add(1, 3, 1, "文件3");
+			editMenu.add(2, 1, 1, "输入1");
+			editMenu.add(2, 2, 1, "输入2");
+			editMenu.add(2, 3, 1, "输入3");
+			return super.onCreateOptionsMenu(menu);
+		  }
+
+		  //创建点击事件
+		  public boolean onOptionsItemSelected(MenuItem item) {
+			if (item.getGroupId() == 1) {
+			  switch (item.getItemId()) {
+				case 1:
+				  Toast.makeText(this, "点击了文件1", Toast.LENGTH_SHORT).show();
+				  break;
+				case 2:
+				  Toast.makeText(this, "点击了文件2", Toast.LENGTH_SHORT).show();
+				  break;
+				case 3:
+				  Toast.makeText(this, "点击了文件3", Toast.LENGTH_SHORT).show();
+				  break;
+
+				default:
+				  break;
+			  }
+			} else if (item.getGroupId() == 2) {
+			  switch (item.getItemId()) {
+				case 1:
+				  Toast.makeText(this, "点击了输入1", Toast.LENGTH_SHORT).show();
+				  break;
+				case 2:
+				  Toast.makeText(this, "点击了输入2", Toast.LENGTH_SHORT).show();
+				  break;
+				case 3:
+				  Toast.makeText(this, "点击了输入3", Toast.LENGTH_SHORT).show();
+				  break;
+
+				default:
+				  break;
+			  }
+			}
+			return super.onOptionsItemSelected(item);
+		  }
+		}	
 		
 	2.常用UI组件
 		1).Layout布局
+		主要是5种布局,常用就线性布局和相对布局
+		a.线性布局 - Linear Layout：
+		按排列的方向（orientation）分为水平线性布局(android:orientation="horizontal"//默认的是水平线性布局)
+		和垂直线性布局(android:orientation="vertical")。
+		线性布局定义了排列方向后，会一直沿着该方向一直排列下去，除非利用嵌套再重新定义。
+		android:layout_weight="数字" //表示剩余空间该控件所占的百分比，通常用于平均几个控件之间的位置，定义为1
+		区分“android:gravity”和“android:layout_gravity”。
+		android:gravity：是对控件本身来说的，是用来设置“控件自身的内容”应该显示在“控件自身体积”的什么位置,默认值是左侧。
+		android:layout_gravity：是相对于控件的父元素来说的，设置该控件在它的父元素的什么位置。
+		b.相对布局 - Relative Layout：
+		android:layout_alignParentLeft="true" 位于父容器左上角
+		android:layout_alignParentBottom, android:layout_alignParentTop,
+		android:layout_alignParentRight  只能在父控件为RelativeLayout时才起作用，而对于像LinearLayout这样的布局不起作用
+		android:layout_centerInParent="true" 位于布局容器的中央位置；
+		layout_centerHorizontal位于布局容器水平居中位置；
+		layout_centerVertical位于布局容器垂直居中位置
+		被参照控件：控件与控件之间位置
+		android:layout_below="@id/***" 位于***组件下方 
+		android:layout_toLeftOf="@id/###"位于###组件左则，紧贴并列
+		控件与控件之间对齐方式 
+		android:layout_alignLeft="@id/***"与***组件左边界紧贴对齐，叠在一起；
+		android:layout_alignTop="@id/###"与###组件上边界对齐
+		可以通过另一个控件的ID来确定当前控件的位置（即任意两个控件之间的相对位置）。
+		c.表格布局 - Table Layout
+		d.网格布局—Graid Layout
+		e.绝对布局 - AbsoluteLayout
+		f.帧布局 – FrameLayout
+		帧布局，默认针对左边位置的（可用android:layout_gravity="center"定义位置）。
+		所有的控件都有各自的坐标位置来显示-->又框架布局是最简单的布局形式。所有添加到这个布局中的视图都以层叠的方式显示。
+		第一个添加的控件被放在最底层，最后一个添加到框架布局中的视图显示在最顶层，上一层的控件会覆盖下一层的控件。这种显示方式有些类似于堆栈。
+		h.约束布局-ConstraintLayout
+		看鸿洋的博客吧 https://blog.csdn.net/lmj623565791/article/details/78011599
+		基本使用ConstraintLayout的功能非常非常简单，首先在build.gradle中添加最新的库：implementation 'com.android.support.constraint:constraint-layout:1.1.0-beta4'，然后在xml文件中调用相关的属性API即可。
+		ConstraintLayout最好的使用还是通过拖拽来布局
 		2).ImageView
+		自定义ImageView一般在Android最多的就是自定义一个圆形的头像的Imageview
+		推荐使用https://github.com/hdodenhof/CircleImageView
 		3).CardView
-		4).其他布局
+		CardView继承自FrameLayout类，并且可以设置圆角和阴影，使得控件具有立体性，也可以包含其他的布局容器和控件。
+		Google用一句话介绍了CardView：一个带圆角和阴影背景的FrameLayout。
+		CardView符合Android Material Design设计风格 显得很高级
+		<android.support.v7.widget.CardView
+        android:id="@+id/cv_content"
+        tools:targetApi="lollipop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:stateListAnimator="@drawable/selector_elevation"
+        android:layout_marginLeft="@dimen/dp_8"
+        android:layout_marginRight="@dimen/dp_8"
+        android:layout_marginBottom="@dimen/dp_8"
+        android:foreground="?android:attr/selectableItemBackground"
+        app:cardCornerRadius="@dimen/dp_8"
+        app:cardUseCompatPadding="true"
+        app:cardPreventCornerOverlap="false"
+        android:visibility="visible">
+
+				<RelativeLayout
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content">
+
+					<ImageView
+						android:id="@+id/iv_cover"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:adjustViewBounds="true"
+						android:contentDescription="@null"
+						android:src="@mipmap/header"/>
+
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_margin="@dimen/dp_16"
+						android:text="微信公众号：安卓笔记侠"
+						android:textColor="@color/white"
+						android:textSize="@dimen/sp_16"
+						android:layout_alignBottom="@id/iv_cover"/>
+
+					<TextView
+						android:id="@+id/tv_content"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_marginLeft="@dimen/dp_16"
+						android:layout_marginRight="@dimen/dp_16"
+						android:layout_marginTop="@dimen/dp_16"
+						android:lineSpacingMultiplier="1.2"
+						android:text="Android Developer's notes.\n和一个久经沙场的码农的喃喃自语。"
+						android:textColor="#757575"
+						android:textSize="@dimen/sp_14"
+						android:layout_below="@id/iv_cover"/>
+
+					<Button
+						android:id="@+id/btn_share"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						style="?borderlessButtonStyle"
+						android:text="SHARE"
+						android:textSize="@dimen/sp_16"
+						android:textColor="#FF9800"
+						android:layout_below="@id/tv_content"
+						android:background="@color/white"/>
+
+					<Button
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						style="?borderlessButtonStyle"
+						android:text="EXPLORE"
+						android:textSize="@dimen/sp_16"
+						android:textColor="#FF9800"
+						android:layout_toRightOf="@id/btn_share"
+						android:layout_alignBaseline="@id/btn_share"
+						android:background="@color/white"/>
+
+				</RelativeLayout>
+
+			</android.support.v7.widget.CardView>
+	
 	3.网络操作
 		1).Thread
+		a.定义：线程，可以看作是进程的一个实体，是CPU调度和分派的基本单位，它是比进程更小的能独立运行的基本单位。
+		b.Thread的主要函数
+		run():线程运行时所执行的代码
+		start(): 启动线程
+		sleep()/ sleep(long millis): 线程休眠，进入阻塞状态，sleep方法不会释放锁（其它线程不会进入synchronized方法体或方法块，不释放锁需要try/catch）
+		yield(): 线程休眠，进入阻塞状态，sleep方法不会释放锁（其它线程不会进入synchronized方法体或方法块，不释放锁需要try/catch）
+		join()/join(long millis)/join(long millis,int nanoseconds): 线程插队，当该子线程执行完毕后接着执行其它
+		wait(): 进入阻塞状态，释放锁（其它线程可以进入synchronized方法体或方法块，释放锁不需要try/catch）
+		currentThread(): 静态函数获取当前线程
+		c.Thread的几种状态
+		新建状态（new）：实例化之后进入该状态；
+		就绪状态（Runnable）：线程调用start()之后就绪状态等待cpu执行，注意这时只是表示可以运行并不代表已经运行；
+		运行状态（Running）：线程获得cpu的执行，开始执行run()方法的代码；
+		阻塞状态（Blocked）：线程由于各种原因进入阻塞状态：join()、sleep()、wait()、等待触发条件、等待由别的线程占用的锁；
+		死亡状态（Dead）：线程运行完毕或异常退出，可使用isAlive()获取状态。
+		d.创建线程的三种方式
+		继承Thread类：新建一个类继承Tread，然后在相应的位置调用即可。
+		实现Runnable接口：在相应的Activity中实现相应的接口，即implements  Runnable。
+		使用匿名方法类：当更多的时候我们喜欢使用匿名类，即下面这种写法：
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}).start();
+		e.如何终止线程
+		一个认识：在线程正常运行状态下是不能停止线程的，确实有个stop()的方法，但是这个方法很危险，就像正在使用的电脑突然关闭电源一样，会造成不可预料的后果，所以建议别使用
+		那么怎么停止线程呢
+		<1>使用退出标识
+		当run方法执行完后，线程就会退出。
+		但有时run方法是永远不会结束的，如在服务端程序中使用线程进行监听客户端请求，或是其他的需要循环处理的任务。
+		在这种情况下，一般是将这些任务放在一个循环中，如while循环。如果想使while循环在某一特定条件下退出，
+		最直接的方法就是设一个boolean类型的标志，并通过设置这个标志为true或false来控制while循环是否退出。
+		
+		public class Test {
+			public static volatile boolean exit = false;//退出标志。volatile关键字的目的是使exit同步，也就是说在同一时刻只能由一个线程来修改exit的值
+			public static void main(String[] args) {
+				new Thread() {
+					public void run() {
+						System.out.println("线程启动了");
+						while (!exit) {//死循环，正常情况下是不会停止的
+							try {
+								Thread.sleep(1000);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							System.out.println(new SimpleDateFormat("HH:mm:ss").format(new Date()));
+						}
+						System.out.println("线程安全停止了");
+					};
+				}.start();
+				new Thread() {//另开一条线程
+					public void run() {
+						try {
+							Thread.sleep(1000 * 5);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						exit = true;//5秒后更改退出标志的值
+					};
+				}.start();
+			}
+		}
+		
+		<2>使用interrupt
+		如果一个线程由于等待某些事件的发生而被阻塞，又该怎样停止该线程呢？
+		这种情况经常会发生，比如当一个线程由于需要等候键盘输入而被阻塞，或者调用Thread.join()方法，或者Thread.sleep()方法，在网络中调用ServerSocket.accept()方法，或者调用了DatagramSocket.receive()方法时，都有可能导致线程阻塞，使线程处于处于不可运行状态时，即使主程序中将该线程的共享变量设置为true，但该线程此时根本无法检查循环标志，当然也就无法立即中断。
+		这里我们给出的建议是，不要使用stop()方法，而是使用Thread提供的interrupt()方法，因为该方法虽然不会中断一个正在运行的线程，但是它可以使一个被阻塞的线程抛出一个中断异常，从而使线程提前结束阻塞状态，退出堵塞代码。
+		使用interrupt方法来终端线程可分为两种情况：
+		线程处于阻塞状态，如Thread.sleep、wait、IO阻塞等情况时。在这种情况下调用interrupt方法后，sleep方法将抛出一个InterruptedException
+		public class Test {
+			public static void main(String[] args) throws InterruptedException {
+				Thread thread = new Thread() {
+					public void run() {
+						System.out.println("线程启动了");
+						try {
+							Thread.sleep(1000 * 10);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						System.out.println("哈哈，被中断了：" + isInterrupted());//这里的结果竟然是false
+					}
+				};
+				thread.start();
+				Thread.sleep(1000 * 1);
+				thread.interrupt();//注意，此方法不会中断一个正在运行的线程，它的作用是：在线程受到阻塞时抛出一个中断信号，这样线程就得以退出阻塞的状态
+				Thread.sleep(1000 * 1);
+				System.out.println("线程是否被中断：" + thread.isInterrupted());//这里的结果竟然是false
+			}
+		}  
+		使用来判断线程是否被中断
+		public class Test {
+			public static void main(String[] args) throws InterruptedException {
+				Thread thread = new Thread() {
+					public void run() {
+						System.out.println("线程启动了");
+						while (!isInterrupted()) {
+							System.out.println(new SimpleDateFormat("HH:mm:ss").format(new Date()) + "--" + isInterrupted());//调用之后为true
+						}
+						System.out.println("哈哈，被中断了");
+					}
+				};
+				thread.start();
+				Thread.sleep(1000 * 2);
+				thread.interrupt();//注意，此方法不会中断一个正在运行的线程，它的作用是：在线程受到阻塞时抛出一个中断信号，这样线程就得以退出阻塞的状态
+				System.out.println("线程是否被中断：" + thread.isInterrupted());//true
+			}
+		}
+		这种方法其实也就是加个布尔值去停止了执行的方法
 		2).Handler
+		Handler是一个消息分发对象，进行发送和处理消息，并且其 Runnable 对象与一个线程的 MessageQueue 关联。
+		作用：调度消息，将一个任务切换到某个指定的线程中去执行。
+		Handler的基本使用就不用说了，主要说一下在Activity里使用Handler要注意Activity销毁时的内存泄漏
+		static class InterHandler extends Handler {
+
+			private WeakReference<MainActivity> mActivity;
+
+			public InterHandler(MainActivity activity) {
+			  mActivity = new WeakReference<>(activity);
+			}
+
+			@Override public void handleMessage(Message msg) {
+			  MainActivity activity = mActivity.get();
+			  if (activity != null) {
+				switch (msg.what) {
+				  case 1://处理业务逻辑
+
+					break;
+				}
+			  } else {
+				super.handleMessage(msg);
+			  }
+			}
+		  }
+
+		  InterHandler handler;
+		  public void fun(){
+			handler = new InterHandler(MainActivity.this);
+			Message message = Message.obtain(handler, 1);
+			handler.sendMessage(message);
+		  }
+
+		  @Override protected void onDestroy() {
+			super.onDestroy();
+			if (handler != null) {
+			  handler.removeCallbacksAndMessages(null);
+			  handler = null;
+			}
+		  }
 		3).AsyncTask
-		4).Socket
-		5).Http
+		a.Android中的多线程
+		在Android当中，当一个应用程序的组件启动的时候，并且没有其他的应用程序组件在运行时，Android系统就会为该应用程序组件开辟一个新的线程来执行。
+		默认的情况下，在一个相同Android应用程序当中，其里面的组件都是运行在同一个线程里面的，这个线程我们称之为Main线程。
+		当我们通过某个组件来启动另一个组件的时候，这个时候默认都是在同一个线程当中完成的。
+		当然，我们可以自己来管理我们的Android应用的线程，我们可以根据我们自己的需要来给应用程序创建额外的线程。
+		b.Main Thread 和 Worker Thread
+		在Android当中，通常将线程分为两种，一种叫做Main Thread，除了Main Thread之外的线程都可称为Worker Thread。
+		当一个应用程序运行的时候，Android操作系统就会给该应用程序启动一个线程，这个线程就是我们的Main Thread。
+		这个线程非常的重要，它主要用来加载我们的UI界面，完成系统和我们用户之间的交互，并将交互后的结果又展示给我们用户。
+		所以Main这个线程非常的重要，它主要用来加载我们的UI界面，完成系统和我们用户之间的交互，并将交互后的结果又展示给我们用户。
+		所以Main Thread又被称为UI Thread。
+		Android系统默认不会给我们的应用程序组件创建一个额外的线程，所有的这些组件默认都是在同一个线程中运行。
+		然而，某些时候当我们的应用程序需要完成一个耗时的操作的时候，例如访问网络或者是对数据库进行查询时，此时我们的UI Thread就会被阻塞。
+		例如，当我们点击一个Button，然后希望其从网络中获取一些数据，如果此操作在UI Thread当中完成的话，当我们点击Button的时候，UI线程就会处于阻塞的状态，此时，我们的系统不会调度任何其它的事件，
+		更糟糕的是，当我们的整个现场如果阻塞时间超过5秒钟(官方是这样说的)，这个时候就会出现 ANR (Application Not Responding)的现象，此时，应用程序会弹出一个框，让用户选择是否退出该程序。
+		对于Android开发来说，出现ANR的现象是绝对不能被允许的。
+		另外，由于我们的Android UI控件是线程不安全的，所以我们不能在UI Thread之外的线程当中对我们的UI控件进行操作。因此在Android的多线程编程当中，我们有两条非常重要的原则必须要遵守：
+		<1>.绝对不能在UI Thread当中进行耗时的操作，不能阻塞我们的UI Thread
+		<2>.不能在UI Thread之外的线程当中操纵我们的UI元素
+		c.如何处理UI Thread 和 Worker Thread之间的通信
+		既然在Android当中有两条重要的原则要遵守，那么我们可能就有疑问了？
+		我们既不能在主线程当中处理耗时的操作，又不能在工作线程中来访问我们的UI控件，那么我们比如从网络中要下载一张图片，又怎么能将其更新到UI控件上呢？
+		这就关系到了我们的主线程和工作线程之间的通信问题了。
+		在Android当中，提供了两种方式来解决线程直接的通信问题，
+		一种是通过Handler的机制(这种方式在后面的随笔中将详细介绍),
+		还有一种就是要详细讲解的 AsyncTask 机制。
+		d.AsyncTask
+		<1>.AsyncTask：异步任务，从字面上来说，就是在我们的UI主线程运行的时候，异步的完成一些操作。
+		AsyncTask允许我们的执行一个异步的任务在后台。我们可以将耗时的操作放在异步任务当中来执行，并随时将任务执行的结果返回给我们的UI线程来更新我们的UI控件。
+		通过AsyncTask我们可以轻松的解决多线程之间的通信问题。
+		
+		<2>.怎么来理解AsyncTask呢？通俗一点来说，AsyncTask就相当于Android给我们提供了一个多线程编程的一个框架，其介于Thread和Handler之间，
+		我们如果要定义一个AsyncTask，就需要定义一个类来继承AsyncTask这个抽象类，并实现其唯一的一个 doInBackgroud 抽象方法。
+		要掌握AsyncTask，我们就必须要一个概念，总结起来就是: 3个泛型，4个步骤。
+		
+		3个泛型:AsyncTask　<Params, Progress, Result>
+		Params: 这个泛型指定的是我们传递给异步任务执行时的参数的类型
+		Progress: 这个泛型指定的是我们的异步任务在执行的时候将执行的进度返回给UI线程的参数的类型
+		Result: 这个泛型指定的异步任务执行完后返回给UI线程的结果的类型
+		我们在定义一个类继承AsyncTask类的时候，必须要指定好这三个泛型的类型，如果都不指定的话，则都将其写成Void，例如：
+		AsyncTask <Void, Void, Void>
+		
+		4个步骤:当我们执行一个异步任务的时候，其需要按照下面的4个步骤分别执行
+		
+		public class AsyncTaskImp extends AsyncTask<Void, Void,Void> {
+			
+		    //这个方法是在执行异步任务之前的时候执行，并且是在UI Thread当中执行的，通常我们在这个方法里做一些UI控件的初始化的操作，例如弹出要给ProgressDialog
+			//执行线程任务前的操作
+			//根据需求复写
+		  @Override protected void onPreExecute() {
+			super.onPreExecute();
+		  }
+
+			//在onPreExecute()方法执行完之后，会马上执行这个方法，这个方法就是来处理异步任务的方法，Android操作系统会在后台的线程池当中开启一个worker thread来执行我们的这个方法，所以这个方法是在worker thread当中执行的，这个方法执行完之后就可以将我们的执行结果发送给我们的最后一个 onPostExecute 方法，在这个方法里，我们可以从网络当中获取数据等一些耗时的操作
+			//接收输入参数、执行任务中的耗时操作、返回 线程任务执行的结果
+			//必须复写，从而自定义线程任务
+		  @Override protected Void doInBackground(Void... voids) {
+			return null;
+		  }
+
+			//这个方法也是在UI Thread当中执行的，我们在异步任务执行的时候，有时候需要将执行的进度返回给我们的UI界面，例如下载一张网络图片，我们需要时刻显示其下载的进度，就可以使用这个方法来更新我们的进度。这个方法在调用之前，我们需要在 doInBackground 方法中调用一个 publishProgress(Progress) 的方法来将我们的进度时时刻刻传递给 onProgressUpdate 方法来更新
+			//在主线程显示线程任务执行的进度
+			//根据需求复写
+		  @Override protected void onProgressUpdate(Void... values) {
+			super.onProgressUpdate(values);
+		  }
+
+			//当我们的异步任务执行完之后，就会将结果返回给这个方法，这个方法也是在UI Thread当中调用的，我们可以将返回的结果显示在UI控件上
+			//接收线程任务执行结果、将执行结果显示到UI组件
+			//必须复写，从而自定义UI操作
+		  @Override protected void onPostExecute(Void aVoid) {
+			super.onPostExecute(aVoid);
+		  }
+
+		  //将异步任务设置为：取消状态
+		  @Override protected void onCancelled() {
+			super.onCancelled();
+		  }	
+		}
+		
+		<3>.一个用AsyncTask下载图片的Demo
+		activity_main.xml
+		<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent" >
+
+		  <TextView
+			  android:id="@+id/textView"
+			  android:layout_width="match_parent"
+			  android:layout_marginTop="10dp"
+			  android:layout_height="wrap_content"
+			  android:gravity="center"
+			  android:textSize="25sp"
+			  android:layout_alignParentTop="true"
+			  android:text="522"
+			  android:textColor="@color/colorPrimaryDark"/>
+
+		  <ImageView
+			  android:id="@+id/imageView"
+			  android:layout_marginTop="20dp"
+			  android:layout_width="match_parent"
+			  android:layout_below="@id/textView"
+			  android:layout_height="200dp"
+			  android:layout_centerInParent="true"
+			  android:layout_alignParentRight="true"
+			  android:scaleType="fitCenter"/>
+
+
+		  <Button
+			  android:id="@+id/button"
+			  android:layout_width="wrap_content"
+			  android:layout_height="wrap_content"
+			  android:layout_below="@id/imageView"
+			  android:layout_centerHorizontal="true"
+			  android:layout_marginTop="41dp"
+			  android:text="下   载" />
+
+		</RelativeLayout>
+	
+		MainActivity.java
+		public class MainActivity extends AppCompatActivity {
+
+		  @BindView(R.id.textView) TextView textView;
+		  @BindView(R.id.imageView) ImageView imageView;
+		  @BindView(R.id.button) Button button;
+
+		  private ProgressDialog progressDialog;
+		  MyAsyncTask mTask;
+		  private String IMAGE_PATH = "http://seopic.699pic.com/photo/50062/8783.jpg_wh1200.jpg";
+		  @Override protected void onCreate(Bundle savedInstanceState) {
+			super.onCreate(savedInstanceState);
+			setContentView(R.layout.activity_main);
+			ButterKnife.bind(this);
+			init();
+		  }
+
+		  private void init(){
+			progressDialog = new ProgressDialog(MainActivity.this);
+			progressDialog.setTitle("提示信息");
+			progressDialog.setMessage("正在下载中，请稍后......");
+			//    设置setCancelable(false); 表示我们不能取消这个弹出框，等下载完成之后再让弹出框消失
+			progressDialog.setCancelable(false);
+			//    设置ProgressDialog样式为水平的样式
+			progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+		  }
+
+		  @OnClick({ R.id.button})
+		  public void onViewClicked(View view) {
+			switch (view.getId()) {
+			  case R.id.button:
+
+
+				/**
+				 * 步骤3：手动调用execute(Params... params) 从而执行异步线程任务
+				 * 注：
+				 *    a. 必须在UI线程中调用
+				 *    b. 同一个AsyncTask实例对象只能执行1次，若执行第2次将会抛出异常
+				 *    c. 执行任务中，系统会自动调用AsyncTask的一系列方法：onPreExecute()、doInBackground()、onProgressUpdate() 、onPostExecute()
+				 *    d. 不能手动调用上述方法
+				 *    Cannot execute task: the task has already been executed
+				 */
+				mTask = new MyAsyncTask();
+				mTask.execute(IMAGE_PATH);
+				break;
+			}
+		  }
+
+		  @Override protected void onDestroy() {
+			super.onDestroy();
+			if(mTask != null){
+			  mTask.cancel(true);
+			}
+		  }
+
+		  /**
+		   * 定义一个类，让其继承AsyncTask这个类
+		   * Params: String类型，表示传递给异步任务的参数类型是String，通常指定的是URL路径
+		   * Progress: Integer类型，进度条的单位通常都是Integer类型
+		   * Result：byte[]类型，表示我们下载好的图片以字节数组返回
+		   *
+		   */
+		  private class MyAsyncTask extends AsyncTask<String, Integer, byte[]>
+		  {
+			@Override
+			protected void onPreExecute()
+			{
+			  super.onPreExecute();
+			  //    在onPreExecute()中我们让ProgressDialog显示出来
+			  progressDialog.show();
+			  textView.setText("加载中");
+			}
+			@Override
+			protected byte[] doInBackground(String... params)
+			{
+			  //    通过Apache的HttpClient来访问请求网络中的一张图片
+			  HttpClient httpClient = new DefaultHttpClient();
+			  HttpGet httpGet = new HttpGet(params[0]);
+			  byte[] image = new byte[]{};
+			  try
+			  {
+				HttpResponse httpResponse = httpClient.execute(httpGet);
+				HttpEntity httpEntity = httpResponse.getEntity();
+				InputStream inputStream = null;
+				ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+				if(httpEntity != null && httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK)
+				{
+				  //    得到文件的总长度
+				  long file_length = httpEntity.getContentLength();
+				  //    每次读取后累加的长度
+				  long total_length = 0;
+				  int length = 0;
+				  //    每次读取1024个字节
+				  byte[] data = new byte[1024];
+				  inputStream = httpEntity.getContent();
+				  while(-1 != (length = inputStream.read(data)))
+				  {
+					//    每读一次，就将total_length累加起来
+					total_length += length;
+					//    边读边写到ByteArrayOutputStream当中
+					byteArrayOutputStream.write(data, 0, length);
+					//    得到当前图片下载的进度
+					int progress = ((int)(total_length/(float)file_length) * 100);
+					//    时刻将当前进度更新给onProgressUpdate方法
+					publishProgress(progress);
+					//progressDialog.setProgress(progress);
+				  }
+				}
+				image = byteArrayOutputStream.toByteArray();
+				inputStream.close();
+				byteArrayOutputStream.close();
+			  }
+			  catch (Exception e)
+			  {
+				e.printStackTrace();
+			  }
+			  finally
+			  {
+				httpClient.getConnectionManager().shutdown();
+			  }
+			  return image;
+			}
+			@Override
+			protected void onProgressUpdate(Integer... values)
+			{
+			  super.onProgressUpdate(values);
+			  //    更新ProgressDialog的进度条
+			  progressDialog.setProgress(values[0]);
+			}
+			@Override
+			protected void onPostExecute(byte[] result)
+			{
+			  super.onPostExecute(result);
+			  //    将doInBackground方法返回的byte[]解码成要给Bitmap
+			  Bitmap bitmap = BitmapFactory.decodeByteArray(result, 0, result.length);
+			  //    更新我们的ImageView控件
+			  imageView.setImageBitmap(bitmap);
+			  //    使ProgressDialog框消失
+			  progressDialog.dismiss();
+			  // 执行完毕后，则更新UI
+			  textView.setText("加载完毕");
+			}
+
+			// 方法5：onCancelled()
+			// 作用：将异步任务设置为：取消状态
+			@Override
+			protected void onCancelled() {
+
+			  textView.setText("已取消");
+			  progressDialog.setProgress(0);
+
+			}
+		  }
+		}
+		
+		<4>.AsyncTask的初步封装
+		https://www.jianshu.com/p/16b686b7c9e7
+	
 	4.本地储存操作
 		1).SQLite
 		2).SharePreferences
@@ -1087,3 +1686,4 @@
 		4).热修复技术和选型
 		5).插件化开发
 		6).JsBridge框架
+		7).Rxjava
