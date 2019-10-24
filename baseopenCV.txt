@@ -1,0 +1,17 @@
+一、OpenCV基础知识
+	1. reshape函数 在OpenCV中，reshape函数比较有意思，它既可以改变矩阵的通道数，又可以对矩阵元素进行序列化，非常有用的一个函数。
+	函数原型：
+	C++: Mat Mat::reshape(int cn, int rows=0) const
+	参数比较少，但设置的时候却要千万小心。
+	cn: 表示通道数(channels), 如果设为0，则表示保持通道数不变，否则则变为设置的通道数。
+	rows: 表示矩阵行数。 如果设为0，则表示保持原有的行数不变，否则则变为设置的行数。
+	
+	2. transpose函数 OpenCV中的transpose函数实现图像转置 实现图片方向和镜像图片的同时变换
+	
+	3. std::string str  标准C++库字符串类std::string的用法
+	
+	4. std::vector<int>  vector是表示可以改变大小的数组的序列容器。  template <class T，class Alloc = allocator <T> > class vector; //通用模板 
+	
+	5. std::pair 是将2个数据组合成一个数据，当需要这样的需求时就可以使用pair，如stl中的map就是将key和value放在一起来保存。另一个应用是，当一个函数需要返回2个数据的时候，可以选择pair。 pair的实现是一个结构体，主要的两个成员变量是first second 因为是使用struct不是class，所以可以直接使用pair的成员变量。
+	
+	6. std::max_element  position=max_element(a,a+n)-a;  这样写的话就代表的是找到的最大元素的位置在哪里，position代表位置，还是蛮好理解的吧？  值得注意的一点是这个返回的是最大元素的位置，即指针指向第一个最大元素我们用以下方式表示找到的最大元素的值

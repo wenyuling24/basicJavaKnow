@@ -1650,6 +1650,7 @@
 	
 	4.本地储存操作
 		1).SQLite
+		
 		2).SharePreferences
 		3).SDCard
 	5.系统核心组件
